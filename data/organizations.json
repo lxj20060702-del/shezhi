@@ -1,0 +1,129 @@
+{
+  "meta": {
+    "title": "公益组织库",
+    "version": "v0.2",
+    "updated": "2026-09-20",
+    "notice": "全部为公开信息，逐条核实，来源见 source_name/source_url；引用需注明出处。"
+  },
+  "organizations": [
+    {
+      "id": "org_mulan",
+      "name": "北京木兰花开社工服务中心",
+      "aliases": ["木兰花开", "北京木兰花开"],
+      "type": "公益组织",
+      "target": "来京务工的打工女性（流动女性）",
+      "services": ["社区活动室", "同伴支持", "文艺与兴趣活动"],
+      "activities": ["演唱", "瑜伽", "尤克里里", "摄影", "写作", "书法课", "文艺演出/戏剧", "“女性和她的物”展览"],
+      "founded": "2010 年在北京市民政局注册",
+      "contact": "见机构公开渠道",
+      "source_name": "中国妇女报 / 天眼查 / 中国青年报",
+      "source_url": "https://www.cnwomen.com.cn",
+      "tags": ["流动女性", "打工女性", "有子女", "文艺活动"],
+      "updated": "2026-09-16"
+    },
+    {
+      "id": "org_xiezuozhe",
+      "name": "北京市协作者社会工作发展中心",
+      "aliases": ["北京协作者"],
+      "type": "公益组织",
+      "target": "流动人口：农民工、流动儿童、打工妈妈",
+      "services": ["社会工作专业服务", "法律援助", "紧急救援", "流动儿童服务", "健康服务"],
+      "activities": ["紧急救援（2003 抗非典、2020 抗疫）", "儿童/家庭支持活动"],
+      "founded": "",
+      "contact": "官网 facilitator.org.cn",
+      "source_name": "机构官网",
+      "source_url": "https://www.facilitator.org.cn",
+      "tags": ["流动人口", "流动儿童", "打工妈妈", "法律援助"],
+      "updated": "2026-09-16"
+    },
+    {
+      "id": "org_gongyou",
+      "name": "北京工友之家文化发展中心",
+      "aliases": ["工友之家"],
+      "type": "公益组织",
+      "target": "打工者（“新工人”）",
+      "services": ["文化教育", "权益维护", "同心互惠（二手公益商店）"],
+      "activities": ["打工青年艺术团", "同心实验学校（打工者子女学校）", "同心互惠"],
+      "founded": "创办人 孙恒、王德志",
+      "contact": "见机构公开渠道",
+      "source_name": "志愿北京 / 中国青年报",
+      "source_url": "https://www.bv2008.cn",
+      "tags": ["打工者", "新工人", "流动儿童", "文化活动"],
+      "updated": "2026-09-16"
+    },
+    {
+      "id": "org_nongjianv",
+      "name": "北京农家女文化发展中心",
+      "aliases": ["农家女"],
+      "type": "公益组织",
+      "target": "农村女性、打工妹",
+      "services": ["打工妹之家", "农家女实用技能培训学校"],
+      "activities": ["技能培训", "打工妹同伴支持"],
+      "founded": "1993 年《农家女》杂志起家 → 1996 创办打工妹之家 → 1998 创办培训学校 → 2001 成立中心",
+      "contact": "见机构公开渠道",
+      "source_name": "360 百科 / 企查查",
+      "source_url": "https://baike.so.com",
+      "tags": ["农村女性", "打工妹", "技能培训"],
+      "updated": "2026-09-16"
+    },
+    {
+      "id": "org_zhicheng",
+      "name": "北京致诚农民工法律援助与研究中心",
+      "aliases": ["致诚"],
+      "type": "公益组织",
+      "target": "农民工",
+      "services": ["法律援助知识普及", "承办农民工法律援助案件"],
+      "activities": ["农民工讨薪/工伤等法律援助"],
+      "founded": "2009-07-16",
+      "contact": "见机构公开渠道",
+      "source_name": "爱企查",
+      "source_url": "https://aiqicha.baidu.com",
+      "tags": ["农民工", "法律援助", "讨薪"],
+      "updated": "2026-09-16"
+    },
+    {
+      "id": "org_yilian",
+      "name": "北京义联劳动法援助与研究中心",
+      "aliases": ["义联"],
+      "type": "公益组织",
+      "target": "劳动者（农民工等）",
+      "services": ["劳动法援助与研究"],
+      "activities": ["劳动法咨询与援助"],
+      "founded": "2007-08，黄乐平律师发起，经北京市司法局批准、北京市民政局登记",
+      "contact": "见机构公开渠道",
+      "source_name": "职友集 / 机构官网",
+      "source_url": "https://www.jobui.com",
+      "tags": ["劳动者", "农民工", "劳动法", "法律援助"],
+      "updated": "2026-09-16"
+    },
+    {
+      "id": "org_lvqiangwei",
+      "name": "绿色蔷薇社会工作服务中心",
+      "aliases": ["绿色蔷薇"],
+      "type": "公益组织（异地参照）",
+      "target": "流动女工及其子女",
+      "services": ["女工服务", "儿童服务"],
+      "activities": ["女工与儿童社区服务"],
+      "founded": "深圳，创办人 丁当（前女工）",
+      "contact": "见机构公开渠道",
+      "source_name": "媒体报道",
+      "source_url": "",
+      "tags": ["流动女工", "儿童", "异地参照"],
+      "updated": "2026-09-16"
+    }
+  ],
+  "programs": [
+    {
+      "id": "prog_taxiang",
+      "name": "“他乡的你”流动女性支持计划",
+      "type": "项目/计划",
+      "organizer": "中国人口福利基金会 × 招商局慈善基金会",
+      "since": "2022 年 8 月",
+      "detail": "首期资助 29 家机构；入选支付宝公益平台“高质量项目”",
+      "source_name": "中国人口福利基金会官网",
+      "source_url": "https://www.cpwf.org.cn",
+      "tags": ["流动女性", "公益资助"],
+      "updated": "2026-09-16"
+    }
+  ]
+}
