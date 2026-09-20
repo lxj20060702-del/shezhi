@@ -21,13 +21,26 @@ def _load_dotenv():
 _load_dotenv()
 
 
+def _from_secrets(key):
+    """Streamlit Cloud 的 Secrets 兜底。"""
+    try:
+        import streamlit as st
+        return st.secrets.get(key)
+    except Exception:
+        return None
+
+
+def _env(key, default=""):
+    return os.getenv(key) or _from_secrets(key) or default
+
+
 class LLM:
     def __init__(self,
                  base_url=None, api_key=None, model=None, disabled=None):
-        self.base_url = base_url or os.getenv("LLM_BASE_URL", "https://open.bigmodel.cn/api/paas/v4")
-        self.api_key = api_key or os.getenv("LLM_API_KEY", "")
-        self.model = model or os.getenv("LLM_MODEL", "glm-4-flash")
-        env_disabled = os.getenv("LLM_DISABLED", "false").lower() in ("1", "true", "yes")
+        self.base_url = base_url or _env("LLM_BASE_URL", "https://open.bigmodel.cn/api/paas/v4")
+        self.api_key = api_key or _env("LLM_API_KEY", "")
+        self.model = model or _env("LLM_MODEL", "glm-4-flash")
+        env_disabled = str(_env("LLM_DISABLED", "false")).lower() in ("1", "true", "yes")
         self.disabled = disabled if disabled is not None else env_disabled
         self.client = None
         if self.api_key and not self.disabled:
