@@ -1,0 +1,17 @@
+# 「她知」Streamlit 主题配置
+# 🎨 设计同学：想改整体配色，改这里 + assets/style.css 的 --brand 保持一致
+# 改完 push 到 main，云端 1 分钟自动生效
+
+[theme]
+base = "light"                     # 固定浅色（避免观众设备是深色模式时页面变样）
+primaryColor = "#6da34d"           # 主色（公益绿），与 style.css 的 --brand 对齐
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f6f8fa"
+textColor = "#222222"
+font = "sans serif"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false
