@@ -1,0 +1,53 @@
+/* ============================================================
+   「她知」全站样式 —— 🎨 页面设计同学主要改这个文件
+   改完直接 push 到 main，云端 1 分钟自动生效
+   可用变量见 :root，改配色只动这里最省事
+   ============================================================ */
+
+:root {
+  --brand:       #6da34d;   /* 主色（公益绿） */
+  --brand-soft:  #f2f7ee;   /* 主色浅底 */
+  --ink:         #222;      /* 正文 */
+  --ink-soft:    #666;      /* 次要文字 */
+  --line:        #e3e6ea;   /* 边框 */
+  --radius:      10px;
+}
+
+/* ---------- 标题区 ---------- */
+.big-title { font-size: 2rem; font-weight: 800; margin-bottom: 0; }
+.sub       { color: var(--ink-soft); margin-top: 0; }
+
+/* ---------- 来源卡片（智能问答的「查看依据」） ---------- */
+.src {
+  background: #f6f8fa;
+  border-left: 3px solid var(--brand);
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin: 6px 0;
+  font-size: .9rem;
+}
+
+/* ---------- 推荐卡片（为你推荐） ---------- */
+.rec {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin: 10px 0;
+  background: #fff;
+}
+.rec-t { font-size: 1.02rem; font-weight: 700; margin-bottom: 6px; }
+.rec-s { color: var(--brand); font-weight: 600; font-size: .82rem; margin-left: 6px; }
+.rec-line { font-size: .9rem; color: #333; margin: 3px 0; line-height: 1.5; }
+.rec-line code {
+  background: #eef2f6; color: #2f6f9f; border-radius: 4px;
+  padding: 1px 5px; font-size: .82rem;
+}
+
+/* ---------- 手机端适配（目标用户主要用手机看） ---------- */
+@media (max-width: 640px) {
+  .big-title { font-size: 1.5rem; }
+  .sub { font-size: .85rem; }
+  .rec { padding: 10px; }
+  .rec-t { font-size: .96rem; }
+  .rec-line { font-size: .86rem; }
+}

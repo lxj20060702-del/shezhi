@@ -1,9 +1,19 @@
 # -*- coding: utf-8 -*-
-"""用 Streamlit AppTest 做端到端冒烟测试（能抓出运行时异常）"""
+"""用 Streamlit AppTest 做端到端冒烟测试（能抓出运行时异常）
+
+跑法（在项目根目录）：
+    python tests/smoke_test.py
+"""
+import os
 import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+os.chdir(ROOT)                      # AppTest 需要以项目根目录为工作目录
+sys.path.insert(0, str(ROOT))
 from streamlit.testing.v1 import AppTest
 
-at = AppTest.from_file("app.py", default_timeout=60)
+at = AppTest.from_file(str(ROOT / "app.py"), default_timeout=60)
 at.run()
 print("首屏 exception:", at.exception)
 assert not at.exception, at.exception
