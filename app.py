@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 import kb  # noqa: E402
 from qa import QA  # noqa: E402
 from graph import build_graph  # noqa: E402
+from recommend import recommend, summarize  # noqa: E402
 
 st.set_page_config(page_title="她知 · 公益知识问答", page_icon="🌸", layout="wide")
 
@@ -20,6 +21,11 @@ st.markdown("""
 .big-title{font-size:2rem;font-weight:800;margin-bottom:0}
 .sub{color:#888;margin-top:0}
 .src{background:#f6f8fa;border-left:3px solid #6da34d;padding:8px 12px;border-radius:6px;margin:6px 0;font-size:.9rem}
+.rec{border:1px solid #e3e6ea;border-radius:10px;padding:12px 14px;margin:10px 0;background:#fff}
+.rec-t{font-size:1.02rem;font-weight:700;margin-bottom:6px}
+.rec-s{color:#6da34d;font-weight:600;font-size:.82rem;margin-left:6px}
+.rec-line{font-size:.9rem;color:#333;margin:3px 0;line-height:1.5}
+.rec-line code{background:#eef2f6;color:#2f6f9f;border-radius:4px;padding:1px 5px;font-size:.82rem}
 </style>
 """, unsafe_allow_html=True)
 
@@ -45,7 +51,7 @@ with st.sidebar:
     st.divider()
     st.caption("免费方案：GLM-4-Flash / 硅基流动；检索层本地 BM25（jieba）。")
 
-tab1, tab2, tab3 = st.tabs(["💬 智能问答", "🕸️ 知识图谱", "📚 知识库"])
+tab1, tab_rec, tab2, tab3 = st.tabs(["💬 智能问答", "🎯 为你推荐", "🕸️ 知识图谱", "📚 知识库"])
 
 with tab1:
     st.subheader("试试这样问：")
@@ -77,6 +83,65 @@ with tab1:
                         f'{d["source_name"]} · <a href="{d["source_url"]}" target="_blank">{d["source_url"]}</a><br>'
                         f'<span style="color:#888">更新：{d["updated"]}</span></div>',
                         unsafe_allow_html=True)
+
+with tab_rec:
+    st.subheader("🎯 为你推荐")
+    st.caption("说说你的情况，我们从公益组织库里帮你挑出「能帮上忙」的机构（按人群标签匹配，不含广告）")
+
+    from recommend import JOB_OPTIONS, NEED_OPTIONS  # noqa: E402
+
+    with st.form("rec_form"):
+        c1, c2 = st.columns(2)
+        gender = c1.radio("性别", ["女", "男", "不方便说"], horizontal=True)
+        child = c2.radio("有孩子要在北京带着吗？", ["有", "没有"], horizontal=True)
+        jobs = st.multiselect("你现在 / 最近做什么工作？（可多选，不确定可留空）", JOB_OPTIONS)
+        needs = st.multiselect("最想解决的问题？（可多选，建议 1–2 个）", NEED_OPTIONS)
+        go = st.form_submit_button("为我推荐", use_container_width=True)
+
+    if go:
+        st.session_state["rec_profile"] = {
+            "gender": "" if gender == "不方便说" else gender,
+            "jobs": jobs,
+            "needs": needs,
+            "has_child": child == "有",
+        }
+
+    profile = st.session_state.get("rec_profile")
+    if not profile:
+        st.info("先在上面选一选，然后点「为我推荐」👆　（不知道选什么也没关系，直接点按钮也能出结果）")
+    else:
+        res = recommend(profile)
+        st.success(summarize(profile, res))
+        if res["fallback"]:
+            st.caption("没有精确命中标签，下面按「面向外来务工/流动人口的综合性机构」推荐。")
+
+        for i, r in enumerate(res["orgs"], 1):
+            o = r["item"]
+            badges = " ".join(f"<code>{h}</code>" for h in r["reasons"][:6]) or "—"
+            st.markdown(f"""
+<div class="rec">
+  <div class="rec-t">#{i} {o['name']}<span class="rec-s">匹配度 {r['score']}</span></div>
+  <div class="rec-line">👥 <b>服务对象：</b>{o.get('target', '')}</div>
+  <div class="rec-line">🧰 <b>能提供：</b>{'、'.join(o.get('services', []))}</div>
+  <div class="rec-line">🎈 <b>主要活动：</b>{'、'.join(o.get('activities', [])[:6])}</div>
+  <div class="rec-line">💡 <b>为什么推给你：</b>{badges}</div>
+  <div class="rec-line">☎️ <b>联系方式：</b>{o.get('contact') or '见机构公开渠道'}　｜　📅 信息更新：{o.get('updated', '')}</div>
+  <div class="rec-line">🔗 <b>来源：</b><a href="{o.get('source_url', '')}" target="_blank">{o.get('source_name', '')}</a></div>
+</div>
+""", unsafe_allow_html=True)
+
+        if res["programs"]:
+            st.markdown("##### 📌 相关的公益项目 / 计划")
+            for r in res["programs"]:
+                p = r["item"]
+                st.markdown(
+                    f"**{p['name']}**（{p.get('organizer', '')}，{p.get('since', '')}）<br>"
+                    f"<span style='color:#666;font-size:.88rem'>{p.get('detail', '')}　"
+                    f"来源：<a href=\"{p.get('source_url', '')}\" target=\"_blank\">{p.get('source_name', '')}</a></span>",
+                    unsafe_allow_html=True)
+
+        st.divider()
+        st.caption("想了解**怎么办理**（法律援助怎么申请、孩子入学要什么材料），切到「💬 智能问答」问一句，答案带官方来源。")
 
 with tab2:
     st.subheader("公益服务知识图谱")
