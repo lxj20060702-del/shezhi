@@ -42,7 +42,9 @@ _GRAPH_TPL = """
     "人群标签":{color:{background:"#DD7389",border:"#c2566d",highlight:{background:"#DD7389",border:"#9e3d54"},hover:{background:"#DD7389",border:"#c2566d"}}, borderWidth:2, opacity:0.82}
   };
   const container = document.getElementById("net");
-  const isMobile = window.innerWidth <= 640;
+  // 按 iframe 内宽判定：窄窗口下主列也会偏窄，阈值取 480，
+  // 让普通桌面窗口（内宽 600+）也走桌面参数，享受 760px 加高区块
+  const isMobile = window.innerWidth <= 480;
   // 手机端缩小高度；桌面端加高以铺满首屏；body 页边距已清零，外框仅多出 2px 边框
   const netH = isMobile ? 420 : 760;
   const frameH = netH + 2;
@@ -80,7 +82,8 @@ _GRAPH_TPL = """
     },
     groups: groups,
     physics:{
-      stabilization:true,
+      // 迭代次数多一点，布局收敛更充分，每次加载形态更稳定
+      stabilization:{iterations:1500},
       barnesHut:{
         springLength: isMobile?110:140,
         gravitationalConstant:-3000,
@@ -90,11 +93,18 @@ _GRAPH_TPL = """
     interaction:{hover:true, dragNodes:true, dragView:true, zoomView:true}
   });
 
-  // 物理稳定后先锁定布局再居中适配：物理引擎不关，fit 之后节点会继续
-  // 漂移，导致初始视图偏左、右侧大片空白；锁定后 fit 结果即最终居中视图
+  // 物理稳定后先锁定布局再定位：物理引擎不关，定位之后节点会继续
+  // 漂移，导致初始视图偏左；锁定后视图即最终效果
   network.once("stabilizationIterationsDone", function() {
     network.setOptions({physics: {enabled: false}});
-    network.fit({animation: {duration: 600, easingFunction: "easeInOutQuad"}});
+    // 默认 fit 会把右侧离群节点也纳入视野，节点团被压小、右侧留白大；
+    // 改为以节点包围盒中心为视图中心并额外放大 15%，图谱更饱满
+    const bb = network.getBoundingBox();
+    const cx = (bb.left + bb.right) / 2, cy = (bb.top + bb.bottom) / 2;
+    const scale = Math.min(container.clientWidth / (bb.right - bb.left),
+                           container.clientHeight / (bb.bottom - bb.top)) * 1.15;
+    network.moveTo({position: {x: cx, y: cy}, scale: scale,
+                    animation: {duration: 600, easingFunction: "easeInOutQuad"}});
   });
 })();
 </script>
