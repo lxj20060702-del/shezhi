@@ -1,0 +1,798 @@
+/* ============================================================
+   「她知」全站样式 —— 🎨 页面设计同学主要改这个文件
+   改完直接 push 到 main，云端 1 分钟自动生效
+   可用变量见 :root，改配色只动这里最省事
+   ============================================================ */
+
+:root {
+  /* —— 主色：暖杏豆沙（温暖、女性关怀、不刺眼）—— */
+  --brand:        #c97b63;
+  --brand-hover:  #b86a52;
+  --brand-light:  #e0a98f;
+  --brand-soft:   #faf3ee;   /* 主色浅底 */
+
+  /* —— 背景：奶杏色系，拒绝纯白 —— */
+  --bg:           #fdf8f4;   /* 页面背景 */
+  --bg-soft:      #f5ede6;   /* 次要背景 / 输入框底 */
+  --bg-card:      #fffdfa;   /* 卡片底（微暖白） */
+
+  /* —— 文字 —— */
+  --ink:          #3d3530;   /* 正文：暖深棕 */
+  --ink-soft:     #8a7d74;   /* 次要文字 */
+  --ink-faint:    #b3a89e;   /* 更浅的辅助文字 */
+
+  /* —— 线条 —— */
+  --line:         #e8ddd3;   /* 边框 */
+  --line-soft:    #f0e6dc;   /* 更浅的分隔线 */
+
+  --radius:       12px;
+
+  /* —— 动画 —— */
+  --ease:         cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ============================================================
+   🌷 全局背景：柔和渐变 mesh + 浮动柔光装饰
+   ============================================================ */
+[data-testid="stAppViewContainer"] {
+  position: relative;
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 0%,   #fbe8dc 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 90% 20%,  #f5d5c5 0%, transparent 55%),
+    radial-gradient(ellipse 70% 60% at 50% 100%, #fcefe4 0%, transparent 60%),
+    linear-gradient(180deg, #fdf8f4 0%, #faf2eb 100%);
+  background-attachment: fixed;
+}
+/* 浮动柔光装饰（伪元素） */
+[data-testid="stAppViewContainer"]::before {
+  content: "";
+  position: fixed;
+  top: -120px; right: -100px;
+  width: 360px; height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(224,169,143,0.25) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  animation: floatSoft 14s ease-in-out infinite;
+}
+[data-testid="stAppViewContainer"]::after {
+  content: "";
+  position: fixed;
+  bottom: -100px; left: -80px;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(249,205,185,0.30) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  animation: floatSoft 18s ease-in-out infinite reverse;
+}
+/* 确保内容在柔光之上 */
+[data-testid="stAppViewContainer"] > div {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes floatSoft {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(20px, -30px) scale(1.08); }
+}
+
+/* ============================================================
+   Streamlit 默认覆盖
+   ============================================================ */
+[data-testid="stHeader"] {
+  background: transparent;
+}
+
+/* 侧边栏 */
+section[data-testid="stSidebar"] {
+  background: linear-gradient(180deg, #f5ede6 0%, #f0e4d7 100%);
+  border-right: 1px solid var(--line);
+}
+section[data-testid="stSidebar"] .stMarkdown,
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] span {
+  color: var(--ink);
+}
+
+/* ============================================================
+   标题区 —— 「她知」Logo + 副标题 + 🕊️ 粉色飞鸟装饰
+   ============================================================ */
+.stMarkdown p.big-title {
+  font-size: 2.6rem !important;
+  font-weight: 800;
+  margin-bottom: 4px;
+  letter-spacing: 3px;
+  color: var(--brand) !important;
+  filter: drop-shadow(0 2px 4px rgba(201, 123, 99, 0.15));
+  animation: fadeUp 0.6s var(--ease) both;
+  position: relative;
+}
+/* 🦋 蝴蝶装饰 —— 金橙渐变 + 流光 + 振翅（性能优化版） */
+/* 发光烘焙进 SVG（feGaussianBlur 只渲染一次），动画仅用 transform/opacity 走 GPU 合成层 */
+
+/* 右上角 · 主蝴蝶（大 · 金橙翅膀 + 流光 + 内置柔光晕） */
+.stMarkdown p.big-title::before {
+  content: "";
+  position: absolute;
+  right: -58px;
+  top: -30px;
+  width: 116px;
+  height: 78px;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 80'><defs><filter id='g1' x='-35%25' y='-35%25' width='170%25' height='170%25'><feGaussianBlur stdDeviation='2' result='b'/><feMerge><feMergeNode in='b'/><feMergeNode in='SourceGraphic'/></feMerge></filter><linearGradient id='wg1' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%23f7d693'/><stop offset='55%25' stop-color='%23e8a23e'/><stop offset='100%25' stop-color='%23c27226'/></linearGradient><linearGradient id='sh1' x1='-0.5' y1='0' x2='0.5' y2='0'><stop offset='0%25' stop-color='%23fff' stop-opacity='0'/><stop offset='50%25' stop-color='%23fffbe8' stop-opacity='0.72'/><stop offset='100%25' stop-color='%23fff' stop-opacity='0'/><animate attributeName='x1' values='-0.5;1.5' dur='2.6s' repeatCount='indefinite'/><animate attributeName='x2' values='0.5;2.5' dur='2.6s' repeatCount='indefinite'/></linearGradient><g id='w1'><path d='M60 30 Q42 10 16 14 Q8 26 16 38 Q34 40 60 32 Z'/><path d='M60 42 Q46 54 26 62 Q20 54 26 46 Q40 44 60 42 Z'/><path d='M60 30 Q78 10 104 14 Q112 26 104 38 Q86 40 60 32 Z'/><path d='M60 42 Q74 54 94 62 Q100 54 94 46 Q80 44 60 42 Z'/></g></defs><use href='%23w1' fill='url(%23wg1)' opacity='0.93' filter='url(%23g1)'/><use href='%23w1' fill='url(%23sh1)'/><circle cx='28' cy='26' r='3.4' fill='%23fff' opacity='0.92'/><circle cx='92' cy='26' r='3.4' fill='%23fff' opacity='0.92'/><circle cx='38' cy='49' r='1.9' fill='%23fff' opacity='0.78'/><circle cx='82' cy='49' r='1.9' fill='%23fff' opacity='0.78'/><ellipse cx='60' cy='42' rx='2.4' ry='13.5' fill='%238a4a18'/><path d='M60 29 Q56 19 51 12' stroke='%238a4a18' stroke-width='1.3' fill='none' stroke-linecap='round'/><path d='M60 29 Q64 19 69 12' stroke='%238a4a18' stroke-width='1.3' fill='none' stroke-linecap='round'/></svg>") center/contain no-repeat;
+  animation: floatButterfly 8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 0.4s var(--ease);
+  opacity: 0.92;
+  will-change: transform, opacity;
+}
+.stMarkdown p.big-title:hover::before {
+  opacity: 1;
+  animation: hoverFlutter1 1.4s ease-in-out infinite;
+}
+
+/* 中上方 · 小蝴蝶（金粉渐变 · 镜像朝向 · 内置柔光晕） */
+.stMarkdown p.big-title::after {
+  content: "";
+  position: absolute;
+  right: 142px;
+  top: -38px;
+  width: 66px;
+  height: 46px;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 80'><defs><filter id='g2' x='-35%25' y='-35%25' width='170%25' height='170%25'><feGaussianBlur stdDeviation='1.8' result='b'/><feMerge><feMergeNode in='b'/><feMergeNode in='SourceGraphic'/></feMerge></filter><linearGradient id='wg2' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%23fde0a8'/><stop offset='55%25' stop-color='%23f0b060'/><stop offset='100%25' stop-color='%23d48a3a'/></linearGradient><linearGradient id='sh2' x1='-0.5' y1='0' x2='0.5' y2='0'><stop offset='0%25' stop-color='%23fff' stop-opacity='0'/><stop offset='50%25' stop-color='%23fff8e0' stop-opacity='0.7'/><stop offset='100%25' stop-color='%23fff' stop-opacity='0'/><animate attributeName='x1' values='-0.5;1.5' dur='3s' repeatCount='indefinite'/><animate attributeName='x2' values='0.5;2.5' dur='3s' repeatCount='indefinite'/></linearGradient><g id='w2'><path d='M60 30 Q42 10 16 14 Q8 26 16 38 Q34 40 60 32 Z'/><path d='M60 42 Q46 54 26 62 Q20 54 26 46 Q40 44 60 42 Z'/><path d='M60 30 Q78 10 104 14 Q112 26 104 38 Q86 40 60 32 Z'/><path d='M60 42 Q74 54 94 62 Q100 54 94 46 Q80 44 60 42 Z'/></g></defs><use href='%23w2' fill='url(%23wg2)' opacity='0.9' filter='url(%23g2)'/><use href='%23w2' fill='url(%23sh2)'/><circle cx='28' cy='26' r='3' fill='%23fff' opacity='0.88'/><circle cx='92' cy='26' r='3' fill='%23fff' opacity='0.88'/><ellipse cx='60' cy='42' rx='2.2' ry='12' fill='%237a4214'/><path d='M60 30 Q56 20 51 13' stroke='%237a4214' stroke-width='1.1' fill='none' stroke-linecap='round'/><path d='M60 30 Q64 20 69 13' stroke='%237a4214' stroke-width='1.1' fill='none' stroke-linecap='round'/></svg>") center/contain no-repeat;
+  animation: floatButterfly2 9s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 0.4s var(--ease);
+  opacity: 0.82;
+  transform: scaleX(-1);
+  will-change: transform, opacity;
+}
+.stMarkdown p.big-title:hover::after {
+  opacity: 1;
+  animation: hoverFlutter2 1.3s ease-in-out infinite;
+}
+
+/* 🦋 漂浮动画（translate3d 走 GPU 合成层） */
+@keyframes floatButterfly {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-1deg); }
+  25%      { transform: translate3d(-3px, -5px, 0) rotate(0deg); }
+  50%      { transform: translate3d(2px, -7px, 0) rotate(1deg); }
+  75%      { transform: translate3d(-2px, -3px, 0) rotate(-0.5deg); }
+}
+@keyframes floatButterfly2 {
+  0%, 100% { transform: scaleX(-1) translate3d(0, 0, 0) rotate(0deg); }
+  33%      { transform: scaleX(-1) translate3d(3px, -4px, 0) rotate(1deg); }
+  66%      { transform: scaleX(-1) translate3d(-2px, -2px, 0) rotate(-0.5deg); }
+}
+
+/* 🦋 hover 复合动画（漂浮 + 振翅同时进行，不切换动画避免跳变） */
+/* 振翅幅度收窄到 0.86，避免身体被压扁失真 */
+@keyframes hoverFlutter1 {
+  0%   { transform: translate3d(0, -4px, 0) scaleX(1) rotate(0deg); }
+  25%  { transform: translate3d(-2px, -6px, 0) scaleX(0.86) rotate(-1deg); }
+  50%  { transform: translate3d(1px, -3px, 0) scaleX(1) rotate(0.5deg); }
+  75%  { transform: translate3d(-1px, -7px, 0) scaleX(0.86) rotate(-0.5deg); }
+  100% { transform: translate3d(0, -4px, 0) scaleX(1) rotate(0deg); }
+}
+@keyframes hoverFlutter2 {
+  0%   { transform: scaleX(-1) translate3d(0, -3px, 0) rotate(0deg); }
+  25%  { transform: scaleX(-1) translate3d(2px, -5px, 0) scaleX(-0.86) rotate(1deg); }
+  50%  { transform: scaleX(-1) translate3d(-1px, -2px, 0) scaleX(-1) rotate(0deg); }
+  75%  { transform: scaleX(-1) translate3d(1px, -5px, 0) scaleX(-0.86) rotate(-0.5deg); }
+  100% { transform: scaleX(-1) translate3d(0, -3px, 0) rotate(0deg); }
+}
+
+.stMarkdown p.sub {
+  color: var(--ink-soft) !important;
+  margin-top: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  animation: fadeUp 0.7s var(--ease) 0.1s both;
+}
+
+/* 🦋 副标题后的迷你蝴蝶（金橙 · 流光 · 内置柔光晕） */
+.stMarkdown p.sub::after {
+  content: "";
+  display: inline-block;
+  width: 24px;
+  height: 16px;
+  margin-left: 6px;
+  vertical-align: middle;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 80'><defs><filter id='g3' x='-35%25' y='-35%25' width='170%25' height='170%25'><feGaussianBlur stdDeviation='1.5' result='b'/><feMerge><feMergeNode in='b'/><feMergeNode in='SourceGraphic'/></feMerge></filter><linearGradient id='wg3' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%23f7d693'/><stop offset='100%25' stop-color='%23d48a3a'/></linearGradient><linearGradient id='sh3' x1='-0.5' y1='0' x2='0.5' y2='0'><stop offset='0%25' stop-color='%23fff' stop-opacity='0'/><stop offset='50%25' stop-color='%23fffbe8' stop-opacity='0.7'/><stop offset='100%25' stop-color='%23fff' stop-opacity='0'/><animate attributeName='x1' values='-0.5;1.5' dur='2.8s' repeatCount='indefinite'/><animate attributeName='x2' values='0.5;2.5' dur='2.8s' repeatCount='indefinite'/></linearGradient><g id='w3'><path d='M60 30 Q42 10 16 14 Q8 26 16 38 Q34 40 60 32 Z'/><path d='M60 42 Q46 54 26 62 Q20 54 26 46 Q40 44 60 42 Z'/><path d='M60 30 Q78 10 104 14 Q112 26 104 38 Q86 40 60 32 Z'/><path d='M60 42 Q74 54 94 62 Q100 54 94 46 Q80 44 60 42 Z'/></g></defs><use href='%23w3' fill='url(%23wg3)' opacity='0.9' filter='url(%23g3)'/><use href='%23w3' fill='url(%23sh3)'/><circle cx='28' cy='26' r='3' fill='%23fff' opacity='0.82'/><circle cx='92' cy='26' r='3' fill='%23fff' opacity='0.82'/><ellipse cx='60' cy='42' rx='2.1' ry='11' fill='%237a4214'/></svg>") center/contain no-repeat;
+  animation: floatMini 7s ease-in-out infinite;
+  transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
+  opacity: 0.82;
+  will-change: transform, opacity;
+}
+@keyframes floatMini {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50%      { transform: translate3d(0, -3px, 0) rotate(2deg); }
+}
+.stMarkdown p.sub:hover::after {
+  opacity: 1;
+  transform: scale(1.15) rotate(4deg);
+}
+
+/* 问答页引导文字 */
+.stMarkdown p.qa-hint {
+  color: var(--ink-soft) !important;
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+  line-height: 1.5;
+  animation: fadeUp 0.5s var(--ease) both;
+}
+.stMarkdown p.qa-ask {
+  color: var(--brand) !important;
+  font-weight: 600;
+  font-size: 1rem;
+  margin: 16px 0 8px 0;
+  letter-spacing: 0.5px;
+  animation: fadeUp 0.5s var(--ease) 0.05s both;
+}
+
+/* Streamlit 标题/副标题统一文字色 */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--ink) !important;
+}
+.stMarkdown p, .stMarkdown li, .stMarkdown span {
+  color: var(--ink);
+}
+
+/* ============================================================
+   输入框 / 文本域 / 下拉框
+   ============================================================ */
+.stTextInput input,
+.stTextArea textarea,
+.stNumberInput input,
+[data-baseweb="select"] > div,
+[data-baseweb="base-input"] > div {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius) !important;
+  color: var(--ink) !important;
+  transition: border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+.stTextInput input:focus,
+.stTextArea textarea:focus {
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 0 3px rgba(201, 123, 99, 0.15) !important;
+}
+.stTextInput input::placeholder,
+.stTextArea textarea::placeholder {
+  color: var(--ink-faint);
+}
+
+/* ============================================================
+   💬 聊天提问框
+   ============================================================ */
+.stChatInput[data-testid="stChatInput"] {
+  border-radius: 20px !important;
+  background: linear-gradient(135deg, #f5e9dd 0%, #faf3ee 50%, #f7ece2 100%) !important;
+  border: 1.5px solid var(--brand-light) !important;
+  box-shadow: 0 4px 20px rgba(201, 123, 99, 0.12),
+              inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+  padding: 4px !important;
+  transition: all 0.3s var(--ease);
+  animation: fadeUp 0.5s var(--ease) 0.15s both;
+}
+.stChatInput[data-testid="stChatInput"]:hover {
+  border-color: var(--brand-light);
+  box-shadow: 0 6px 24px rgba(201, 123, 99, 0.18),
+              inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+}
+.stChatInput[data-testid="stChatInput"]:focus-within {
+  border-color: var(--brand) !important;
+  box-shadow: 0 8px 32px rgba(201, 123, 99, 0.22),
+              inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+  transform: translateY(-1px);
+}
+.stChatInput[data-testid="stChatInput"] textarea {
+  background: transparent !important;
+  border: none !important;
+  color: var(--ink) !important;
+  font-size: 1rem !important;
+  line-height: 1.5 !important;
+  padding: 10px 12px !important;
+}
+.stChatInput[data-testid="stChatInput"] textarea::placeholder {
+  color: var(--ink-soft) !important;
+  font-style: italic;
+  opacity: 0.85;
+}
+/* 发送按钮：主色圆形 + 纸飞机 */
+.stChatInput[data-testid="stChatInput"] button {
+  background: var(--brand) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M2 21l21-9L2 3v7l15 2-15 2v7z'/%3E%3C/svg%3E") center/20px no-repeat !important;
+  border-radius: 50% !important;
+  width: 40px !important;
+  height: 40px !important;
+  border: none !important;
+  margin-right: 6px !important;
+  transition: all 0.25s var(--ease);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(201, 123, 99, 0.3);
+}
+.stChatInput[data-testid="stChatInput"] button:hover {
+  background-color: var(--brand-hover) !important;
+  transform: scale(1.1) rotate(-10deg);
+  box-shadow: 0 4px 14px rgba(201, 123, 99, 0.42);
+}
+.stChatInput[data-testid="stChatInput"] button:active {
+  transform: scale(0.92) rotate(-5deg);
+  box-shadow: 0 1px 4px rgba(201, 123, 99, 0.25);
+}
+.stChatInput[data-testid="stChatInput"] button svg {
+  display: none !important;
+}
+
+/* ============================================================
+   🔘 按钮（系统 + 示例问题）
+   ============================================================ */
+.stButton > button,
+.stFormSubmitButton > button {
+  background: var(--brand) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: var(--radius) !important;
+  font-weight: 600 !important;
+  transition: all 0.25s var(--ease) !important;
+  box-shadow: 0 2px 6px rgba(201, 123, 99, 0.18);
+}
+.stButton > button:hover,
+.stFormSubmitButton > button:hover {
+  background: var(--brand-hover) !important;
+  color: #fff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(201, 123, 99, 0.28);
+}
+.stButton > button:active,
+.stFormSubmitButton > button:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: 0 1px 4px rgba(201, 123, 99, 0.2);
+}
+
+/* 次要按钮（示例问题） */
+.stButton > button[kind="secondary"] {
+  background: var(--bg-card) !important;
+  color: var(--brand) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 1px 3px rgba(201, 123, 99, 0.06);
+}
+.stButton > button[kind="secondary"]:hover {
+  background: var(--brand-soft) !important;
+  border-color: var(--brand-light) !important;
+  color: var(--brand) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(201, 123, 99, 0.14);
+}
+
+/* ============================================================
+   🏷️ 标签页 Tabs
+   ============================================================ */
+.stTabs [role="tablist"] {
+  gap: 4px;
+  background: rgba(245, 237, 230, 0.75);
+  backdrop-filter: blur(8px);
+  border-radius: var(--radius);
+  padding: 4px;
+  border: 1px solid rgba(232, 221, 211, 0.5);
+}
+.stTabs [role="tab"] {
+  background: transparent;
+  border-radius: 8px;
+  color: var(--ink-soft);
+  font-weight: 500;
+  transition: all 0.3s var(--ease);
+  padding: 8px 16px;
+  cursor: pointer;
+}
+.stTabs [role="tab"]:hover {
+  color: var(--brand);
+  background: rgba(255, 253, 250, 0.8);
+  transform: translateY(-1px);
+}
+.stTabs [role="tab"][aria-selected="true"] {
+  background: var(--brand) !important;
+  color: #fff !important;
+  box-shadow: 0 3px 10px rgba(201, 123, 99, 0.3);
+}
+.stTabs [role="tab"][aria-selected="true"]:hover {
+  transform: none;
+}
+/* 隐藏原始文字，用 ::before 替换 */
+.stTabs [role="tab"] p {
+  font-size: 0;
+  white-space: nowrap;
+  margin: 0;
+}
+.stTabs [role="tab"] p::before {
+  font-size: 0.98rem;
+  color: inherit;
+}
+.stTabs [role="tab"]:nth-child(1) p::before { content: "✨ 智能问答"; }
+.stTabs [role="tab"]:nth-child(2) p::before { content: "💕 为你推荐"; }
+.stTabs [role="tab"]:nth-child(3) p::before { content: "🗺️ 知识图谱"; }
+.stTabs [role="tab"]:nth-child(4) p::before { content: "📚 知识库"; }
+
+/* ============================================================
+   💬 聊天消息（用户 / AI）
+   ============================================================ */
+.stChatMessage {
+  background: var(--bg-card);
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin: 10px 0;
+  transition: all 0.3s var(--ease);
+  animation: fadeUp 0.4s var(--ease) both;
+}
+.stChatMessage:hover {
+  box-shadow: 0 4px 16px rgba(201, 123, 99, 0.1);
+}
+.stChatMessage[data-testid="stChatMessage-user"] {
+  background: linear-gradient(135deg, #faf3ee 0%, #f5eadf 100%);
+  border-color: var(--brand-light);
+}
+
+/* ============================================================
+   📦 自定义卡片（推荐、来源）
+   ============================================================ */
+.rec {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin: 12px 0;
+  background: var(--bg-card);
+  transition: all 0.3s var(--ease);
+  cursor: default;
+}
+.rec:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 28px rgba(201, 123, 99, 0.16);
+  border-color: var(--brand-light);
+}
+.rec:active {
+  transform: translateY(-1px);
+}
+.rec-t {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+.rec-s {
+  color: var(--brand);
+  font-weight: 600;
+  font-size: .82rem;
+  margin-left: 8px;
+}
+.rec-line {
+  font-size: .9rem;
+  color: var(--ink-soft);
+  margin: 4px 0;
+  line-height: 1.6;
+}
+.rec-line code {
+  background: var(--brand-soft);
+  color: var(--brand);
+  border-radius: 6px;
+  padding: 1px 7px;
+  font-size: .82rem;
+  transition: background 0.2s ease;
+}
+.rec-line code:hover {
+  background: var(--brand-light);
+  color: #fff;
+}
+.rec-line a {
+  color: var(--brand);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.rec-line a:hover {
+  color: var(--brand-hover);
+  text-decoration: underline;
+}
+
+/* 来源卡片 */
+.src {
+  background: linear-gradient(135deg, #f5ede6 0%, #faf3ee 100%);
+  border-left: 3px solid var(--brand);
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin: 10px 0;
+  font-size: .9rem;
+  color: var(--ink);
+  transition: all 0.3s var(--ease);
+}
+.src:hover {
+  transform: translateX(4px);
+  box-shadow: -2px 4px 14px rgba(201, 123, 99, 0.12);
+  border-left-width: 4px;
+}
+.src a {
+  color: var(--brand);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.src a:hover {
+  color: var(--brand-hover);
+  text-decoration: underline;
+}
+
+/* ============================================================
+   📊 表格 DataFrame
+   ============================================================ */
+[data-testid="stDataFrame"] {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: box-shadow 0.3s var(--ease);
+}
+[data-testid="stDataFrame"]:hover {
+  box-shadow: 0 4px 16px rgba(201, 123, 99, 0.1);
+}
+[data-testid="stDataFrame"] table {
+  background: var(--bg-card);
+}
+[data-testid="stDataFrame"] th {
+  background: var(--bg-soft) !important;
+  color: var(--ink) !important;
+  font-weight: 600;
+}
+[data-testid="stDataFrame"] td {
+  color: var(--ink-soft);
+  border-color: var(--line-soft) !important;
+  transition: background 0.2s ease;
+}
+[data-testid="stDataFrame"] tr:hover td {
+  background: var(--brand-soft) !important;
+}
+
+/* ============================================================
+   🧩 Expander 折叠面板
+   ============================================================ */
+[data-testid="stExpander"] {
+  background: var(--bg-card);
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius) !important;
+  transition: all 0.3s var(--ease);
+}
+[data-testid="stExpander"]:hover {
+  border-color: var(--brand-light) !important;
+  box-shadow: 0 2px 10px rgba(201, 123, 99, 0.08);
+}
+
+/* ============================================================
+   ⏳ Spinner 加载动画
+   ============================================================ */
+.stSpinner > div {
+  border-top-color: var(--brand) !important;
+}
+
+/* ============================================================
+   📢 信息提示框
+   ============================================================ */
+.stAlert {
+  border-radius: var(--radius) !important;
+  transition: transform 0.3s var(--ease);
+}
+.stAlert:hover {
+  transform: translateY(-2px);
+}
+.stAlert [data-testid="stAlertContainer"] {
+  color: var(--ink);
+}
+
+/* ============================================================
+   分割线
+   ============================================================ */
+hr {
+  border-color: var(--line-soft) !important;
+}
+[data-testid="stDivider"] {
+  border-color: var(--line-soft) !important;
+}
+
+/* ============================================================
+   🎬 关键帧动画
+   ============================================================ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 为推荐问题按钮添加入场动画（错开） */
+.stChatInput[data-testid="stChatInput"] ~ div .stButton:nth-child(1) > button { animation: fadeUp 0.45s var(--ease) 0.2s both; }
+.stChatInput[data-testid="stChatInput"] ~ div .stButton:nth-child(2) > button { animation: fadeUp 0.45s var(--ease) 0.25s both; }
+.stChatInput[data-testid="stChatInput"] ~ div .stButton:nth-child(3) > button { animation: fadeUp 0.45s var(--ease) 0.3s both; }
+
+/* Tabs 切换内容淡入 */
+.stTabs [role="tabpanel"] {
+  animation: fadeIn 0.35s var(--ease) both;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   手机端适配（轻量动画）
+   ============================================================ */
+@media (max-width: 640px) {
+  .stMarkdown p.big-title { font-size: 1.8rem !important; letter-spacing: 2px; }
+  .stMarkdown p.sub { font-size: .85rem !important; }
+  .rec { padding: 12px; }
+  .rec-t { font-size: .98rem; }
+  .rec-line { font-size: .86rem; }
+
+  /* 手机端：弱化动画，减少重绘 */
+  [data-testid="stAppViewContainer"]::before,
+  [data-testid="stAppViewContainer"]::after {
+    animation-duration: 24s;
+  }
+  .rec:hover,
+  .stButton > button:hover,
+  .stChatInput[data-testid="stChatInput"]:focus-within {
+    transform: translateY(-1px);
+  }
+  /* 手机端：蝴蝶缩小 */
+  .stMarkdown p.big-title::before { width: 70px; height: 48px; right: -36px; top: -18px; }
+  .stMarkdown p.big-title::after { width: 42px; height: 30px; right: 92px; top: -24px; }
+  .stMarkdown p.sub::after { width: 20px; height: 14px; }
+  /* 手机端地图缩小 */
+  .bj-map-svg { height: 280px !important; }
+}
+
+/* ============================================================
+   🗺️ 北京公益服务地图（Choropleth 色块填充）
+   ============================================================ */
+.bj-map-card {
+  background: linear-gradient(135deg, #fffdfa 0%, #faf3ee 100%);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin: 20px 0;
+  box-shadow: 0 2px 12px rgba(201, 123, 99, 0.06);
+  animation: fadeUp 0.5s var(--ease) both;
+}
+.bj-map-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 4px 0;
+}
+.bj-map-desc {
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  margin: 0 0 20px 0;
+}
+
+/* SVG 容器 */
+.bj-map-svg {
+  width: 100%;
+  height: 460px;
+  display: block;
+  background: rgba(250, 243, 238, 0.35);
+  border-radius: 18px;
+  border: 1px solid var(--line-soft);
+  overflow: visible;
+  filter: drop-shadow(0 1px 4px rgba(201, 123, 99, 0.04));
+}
+
+/* 区多边形色块（choropleth 核心 · 棱角柔化） */
+.bj-district {
+  transition: all 0.4s var(--ease);
+  cursor: pointer;
+  stroke: #fff;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-miterlimit: 1;
+}
+.bj-district:hover {
+  fill-opacity: 0.92;
+  stroke: #fff !important;
+  stroke-width: 3 !important;
+  filter: brightness(1.08) saturate(1.08) drop-shadow(0 3px 12px rgba(201, 123, 99, 0.15));
+}
+
+/* 区名标签（在多边形中心） */
+.bj-label {
+  font-size: 10.5px;
+  font-weight: 500;
+  fill: var(--ink);
+  text-anchor: middle;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.75;
+  transition: all 0.25s var(--ease);
+  paint-order: stroke fill;
+  stroke: rgba(255, 255, 255, 0.65);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.bj-district:hover ~ text,
+svg:hover .bj-label {
+  opacity: 0.6;
+}
+
+/* 图例（颜色阶梯条，渐变+两端数值） */
+.bj-legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: rgba(255, 253, 250, 0.7);
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+}
+.bj-legend-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+.bj-legend-min,
+.bj-legend-max {
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.bj-legend-bar {
+  flex: 1;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+  min-width: 80px;
+}
+
+/* 下方16区统计卡片网格 */
+.bj-district-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+.bj-dc {
+  background: var(--bg-card);
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--brand-light);
+  border-radius: 10px;
+  padding: 10px 12px;
+  transition: all 0.3s var(--ease);
+  cursor: default;
+}
+.bj-dc:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(201, 123, 99, 0.14);
+  border-color: var(--brand-light);
+}
+.bj-dc-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.bj-dc-count {
+  font-size: 0.78rem;
+  color: var(--brand);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.bj-dc-srv {
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  line-height: 1.5;
+}
+.bj-dc-empty {
+  opacity: 0.55;
+}
+.bj-dc-empty .bj-dc-count {
+  color: var(--ink-faint);
+}
