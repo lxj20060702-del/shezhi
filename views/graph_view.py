@@ -42,70 +42,86 @@ _GRAPH_TPL = """
     "人群标签":{color:{background:"#DD7389",border:"#c2566d",highlight:{background:"#DD7389",border:"#9e3d54"},hover:{background:"#DD7389",border:"#c2566d"}}, borderWidth:2, opacity:0.82}
   };
   const container = document.getElementById("net");
-  // 按 iframe 内宽判定：窄窗口下主列也会偏窄，阈值取 480，
-  // 让普通桌面窗口（内宽 600+）也走桌面参数，享受 760px 加高区块
-  const isMobile = window.innerWidth <= 480;
-  // 手机端缩小高度；桌面端加高以铺满首屏；body 页边距已清零，外框仅多出 2px 边框
-  const netH = isMobile ? 420 : 760;
-  const frameH = netH + 2;
-  container.style.height = netH + "px";
-  try {
-    // 同步 iframe 自身与其父容器高度：父容器默认保留 components.html
-    // 的初始高度，不一起收缩会在图谱与图例之间留下大片空白
-    const frame = window.frameElement;
-    if (frame) {
-      frame.style.height = frameH + "px";
-      const host = frame.parentElement;
-      if (host) {
-        // 父容器默认带 flex:0 0 <初始高度>，只改 height 会被 flex-basis 压过
-        host.style.setProperty("height", frameH + "px", "important");
-        host.style.setProperty("flex", "0 0 " + frameH + "px", "important");
-        host.style.setProperty("min-height", "0", "important");
-      }
-    }
-  } catch(e){}
 
-  const network = new vis.Network(container, {nodes:nodes, edges:edges}, {
-    nodes:{
-      shape:"dot",
-      font:{size: isMobile?12:14, color:"#3a4a4d", face:"sans-serif",
-            strokeWidth:3, strokeColor:"rgba(255,255,255,.85)"},
-      scaling:{min: isMobile?10:8, max: isMobile?24:26},
-      shadow:{enabled:true, color:"rgba(80,90,100,.38)", size:14, x:0, y:8}
-    },
-    edges:{
-      color:{color:"rgba(194,229,207,.65)", highlight:"#74A9C5", hover:"#C2E5CF"},
-      font:{size: isMobile?9:10, align:"middle", color:"#7a8a8d",
-            strokeWidth:3, strokeColor:"rgba(255,255,255,.9)"},
-      smooth:{type:"continuous"},
-      arrows:{to:{enabled:true, scaleFactor:0.7}}
-    },
-    groups: groups,
-    physics:{
-      // 迭代次数多一点，布局收敛更充分，每次加载形态更稳定
-      stabilization:{iterations:1500},
-      barnesHut:{
-        springLength: isMobile?110:140,
-        gravitationalConstant:-3000,
-        centralGravity:0.45
+  function initGraph() {
+    // 按 iframe 内宽判定：阈值取 480，普通桌面窗口（内宽 600+）走桌面参数
+    const isMobile = window.innerWidth <= 480;
+    // 手机端缩小高度；桌面端加高以铺满首屏；body 页边距已清零，外框仅多出 2px 边框
+    const netH = isMobile ? 420 : 760;
+    const frameH = netH + 2;
+    container.style.height = netH + "px";
+    try {
+      // 同步 iframe 自身与其父容器高度：父容器默认保留 components.html
+      // 的初始高度，不一起收缩会在图谱与图例之间留下大片空白
+      const frame = window.frameElement;
+      if (frame) {
+        frame.style.height = frameH + "px";
+        const host = frame.parentElement;
+        if (host) {
+          // 父容器默认带 flex:0 0 <初始高度>，只改 height 会被 flex-basis 压过
+          host.style.setProperty("height", frameH + "px", "important");
+          host.style.setProperty("flex", "0 0 " + frameH + "px", "important");
+          host.style.setProperty("min-height", "0", "important");
+        }
       }
-    },
-    interaction:{hover:true, dragNodes:true, dragView:true, zoomView:true}
-  });
+    } catch(e){}
 
-  // 物理稳定后先锁定布局再定位：物理引擎不关，定位之后节点会继续
-  // 漂移，导致初始视图偏左；锁定后视图即最终效果
-  network.once("stabilizationIterationsDone", function() {
-    network.setOptions({physics: {enabled: false}});
-    // 默认 fit 会把右侧离群节点也纳入视野，节点团被压小、右侧留白大；
-    // 改为以节点包围盒中心为视图中心并额外放大 15%，图谱更饱满
-    const bb = network.getBoundingBox();
-    const cx = (bb.left + bb.right) / 2, cy = (bb.top + bb.bottom) / 2;
-    const scale = Math.min(container.clientWidth / (bb.right - bb.left),
-                           container.clientHeight / (bb.bottom - bb.top)) * 1.15;
-    network.moveTo({position: {x: cx, y: cy}, scale: scale,
-                    animation: {duration: 600, easingFunction: "easeInOutQuad"}});
-  });
+    const network = new vis.Network(container, {nodes:nodes, edges:edges}, {
+      nodes:{
+        shape:"dot",
+        font:{size: isMobile?12:14, color:"#3a4a4d", face:"sans-serif",
+              strokeWidth:3, strokeColor:"rgba(255,255,255,.85)"},
+        scaling:{min: isMobile?10:8, max: isMobile?24:26},
+        shadow:{enabled:true, color:"rgba(80,90,100,.38)", size:14, x:0, y:8}
+      },
+      edges:{
+        color:{color:"rgba(194,229,207,.65)", highlight:"#74A9C5", hover:"#C2E5CF"},
+        font:{size: isMobile?9:10, align:"middle", color:"#7a8a8d",
+              strokeWidth:3, strokeColor:"rgba(255,255,255,.9)"},
+        smooth:{type:"continuous"},
+        arrows:{to:{enabled:true, scaleFactor:0.7}}
+      },
+      groups: groups,
+      physics:{
+        // 迭代次数多一点，布局收敛更充分，每次加载形态更稳定
+        stabilization:{iterations:1500},
+        barnesHut:{
+          springLength: isMobile?110:140,
+          gravitationalConstant:-3000,
+          centralGravity:0.45
+        }
+      },
+      interaction:{hover:true, dragNodes:true, dragView:true, zoomView:true}
+    });
+
+    // 物理稳定后先锁定布局再定位：物理引擎不关，定位之后节点会继续
+    // 漂移，导致初始视图偏左；锁定后视图即最终效果
+    network.once("stabilizationIterationsDone", function() {
+      network.setOptions({physics: {enabled: false}});
+      // 默认 fit 会把右侧离群节点也纳入视野，节点团被压小、右侧留白大；
+      // 改为以节点包围盒中心为视图中心并额外放大 15%，图谱更饱满
+      const bb = network.getBoundingBox();
+      const cx = (bb.left + bb.right) / 2, cy = (bb.top + bb.bottom) / 2;
+      const scale = Math.min(container.clientWidth / (bb.right - bb.left),
+                             container.clientHeight / (bb.bottom - bb.top)) * 1.15;
+      network.moveTo({position: {x: cx, y: cy}, scale: scale,
+                      animation: {duration: 600, easingFunction: "easeInOutQuad"}});
+    });
+  }
+
+  // 图谱 tab 未激活时 iframe 处于隐藏状态，innerWidth 为 0，
+  // 此刻初始化会被误判成手机模式（420px 高、小字号）；
+  // 轮询等待 iframe 可见后再初始化，桌面才能拿到 760px 加高区块
+  if (window.innerWidth === 0) {
+    const timer = setInterval(function() {
+      if (window.innerWidth > 0) {
+        clearInterval(timer);
+        initGraph();
+      }
+    }, 300);
+  } else {
+    initGraph();
+  }
 })();
 </script>
 """
