@@ -22,7 +22,7 @@ _GRAPH_TPL = """
     box-shadow: 0 4px 16px rgba(116,169,197,.10), 0 1px 3px rgba(0,0,0,.04);
     background: linear-gradient(135deg, #f5f9fc 0%, #fdf6f4 100%);
   }
-  #net { width: 100%; height: 560px; }
+  #net { width: 100%; height: 760px; }
   /* 清零 srcdoc 默认页边距，避免 iframe 内底部留白 */
   html, body { margin: 0; padding: 0; }
 </style>
@@ -43,8 +43,8 @@ _GRAPH_TPL = """
   };
   const container = document.getElementById("net");
   const isMobile = window.innerWidth <= 640;
-  // 手机端缩小高度；body 页边距已清零，外框仅多出 2px 边框
-  const netH = isMobile ? 420 : 560;
+  // 手机端缩小高度；桌面端加高以铺满首屏；body 页边距已清零，外框仅多出 2px 边框
+  const netH = isMobile ? 420 : 760;
   const frameH = netH + 2;
   container.style.height = netH + "px";
   try {
@@ -90,8 +90,10 @@ _GRAPH_TPL = """
     interaction:{hover:true, dragNodes:true, dragView:true, zoomView:true}
   });
 
-  // 物理稳定后自动居中适配，避免图谱偏左
+  // 物理稳定后先锁定布局再居中适配：物理引擎不关，fit 之后节点会继续
+  // 漂移，导致初始视图偏左、右侧大片空白；锁定后 fit 结果即最终居中视图
   network.once("stabilizationIterationsDone", function() {
+    network.setOptions({physics: {enabled: false}});
     network.fit({animation: {duration: 600, easingFunction: "easeInOutQuad"}});
   });
 })();
@@ -222,6 +224,12 @@ def _inject_style():
     .graph-meta { font-size: .72rem; margin-top: 8px; line-height: 1.5; }
     /* 问答输入框：提示语在窄屏换成两行时留足高度，避免第二行被发送按钮遮挡裁切 */
     [data-testid="stChatInput"] textarea { min-height: 70px; }
+    /* 禁止页面整体左右滑动：窄屏下溢出元素会让外框可横向拖动，
+       锁住横向滚动后只保留市面上 App 的上下滑动形式 */
+    html, body { overflow-x: hidden; overscroll-behavior-x: none; }
+    [data-testid="stAppViewContainer"],
+    [data-testid="stMain"],
+    [data-testid="stMainBlockContainer"] { overflow-x: hidden; max-width: 100vw; }
   }
 </style>
 """, unsafe_allow_html=True)
@@ -261,7 +269,7 @@ def render():
     html = (_GRAPH_TPL
             .replace("__NODES__", json.dumps(nodes, ensure_ascii=False))
             .replace("__EDGES__", json.dumps(edges, ensure_ascii=False)))
-    components.html(html, height=562)
+    components.html(html, height=762)
 
     legend_items = [
         ("#74A9C5", "组织"),
