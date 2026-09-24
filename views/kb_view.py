@@ -252,6 +252,11 @@ def render(orgs, policies):
 
     # 北京公益服务地图
     st.markdown("---")
-    st.markdown(_map_svg(), unsafe_allow_html=True)
+    st.markdown("### 🗺️ 北京市公益服务地图")
+    try:
+        st.markdown(_map_svg(), unsafe_allow_html=True)
+    except Exception as e:
+        st.error(f"地图渲染失败：{e}")
+        st.code(_map_svg()[:500])
 
     st.caption("数据均为公开信息，逐条核实；引用需注明出处（详见 docs/数据源核实清单.md）。")
