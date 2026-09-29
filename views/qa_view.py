@@ -37,7 +37,7 @@ def render(qa):
             res = qa.answer(q)
         answer = res["answer"]
 
-st.markdown(answer)
+        st.markdown(answer)
         st.caption(f"路由：{res['route']}库 · 模式：{res['mode']}")
         with st.expander("🔍 查看依据（可溯源）"):
             for i, d in enumerate(res["sources"]):
