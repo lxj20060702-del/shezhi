@@ -24,6 +24,8 @@ def load_documents():
             "活动：" + "、".join(o.get("activities", [])),
             f"成立：{o.get('founded','')}",
             "标签：" + "、".join(o.get("tags", [])),
+            f"简介：{o.get('intro','')}",
+            f"参与方式：{o.get('join','')}",
         ])
         docs.append({
             "id": o["id"], "type": "组织", "title": o["name"],
