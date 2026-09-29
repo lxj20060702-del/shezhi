@@ -37,7 +37,16 @@ def render(qa):
             res = qa.answer(q)
         answer = res["answer"]
 
-        st.markdown(answer)
+        # 把正文里的【来源1】替换成链接
+        for i, d in enumerate(res["sources"]):
+            url = d["source_url"]
+            answer = answer.replace(
+                f"【来源{i+1}】",
+                f"[【来源{i+1}】]({url})"
+            )
+
+        st.markdown(answer, unsafe_allow_html=False)
+        
         st.caption(f"路由：{res['route']}库 · 模式：{res['mode']}")
         with st.expander("🔍 查看依据（可溯源）"):
             for i, d in enumerate(res["sources"]):
