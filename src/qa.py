@@ -40,7 +40,7 @@ class QA:
             docs = self.retriever.search(q, topk=topk)
 
         context = "\n\n".join(
-    f"资料{i+1}：{d['title']}（{d['type']}｜来源：{d['source_name']} {d['source_url']}）\n{d['text']}"
+    f"【资料{i+1}】：{d['title']}（{d['type']}｜来源：{d['source_name']} {d['source_url']}）\n{d['text']}"
     for i, d in enumerate(docs)
         )
         user = f"""
@@ -65,6 +65,9 @@ class QA:
         if text:
             text = re.sub(r'【来源\s*\d+】', '', text)
             text = re.sub(r'\[来源\s*\d+\]', '', text)
+            text = re.sub(r'来源\s*\d+', '', text)
+            text = re.sub(r'\(来源\s*\d+\)', '', text)
+            text = re.sub(r'（来源\s*\d+）', '', text)
             
         if text and not text.startswith("[大模型调用失败"):
             return {"route": route, "mode": "RAG+大模型", "answer": text, "sources": docs}
