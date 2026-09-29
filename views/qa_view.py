@@ -35,7 +35,13 @@ def render(qa):
     with st.chat_message("assistant"):
         with st.spinner("检索知识库中…"):
             res = qa.answer(q)
-        st.markdown(res["answer"])
+        answer = res["answer"]
+
+        # 去掉正文里的来源标记
+        import re
+        answer = re.sub(r"【来源\d+】", "", answer)
+
+st.markdown(answer)
         st.caption(f"路由：{res['route']}库 · 模式：{res['mode']}")
         with st.expander("🔍 查看依据（可溯源）"):
             for i, d in enumerate(res["sources"]):
