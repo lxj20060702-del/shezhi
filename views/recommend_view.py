@@ -292,6 +292,8 @@ def _card_html(idx, r):
   <div class="rec-line"><span>👥</span><b>服务对象：</b><span>{o.get('target', '')}</span></div>
   <div class="rec-line"><span>🧰</span><b>能提供：</b><span>{services}</span></div>
   <div class="rec-line"><span>🎈</span><b>主要活动：</b><span>{activities}</span></div>
+  <div class="rec-line"><span>📖</span><b>机构简介：</b><span>{intro}</span></div>
+  <div class="rec-line"><span>🙋</span><b>参与方式：</b><span>{join}</span></div>
   <div class="rec-reason">
     <div class="rec-line"><span>💡</span><b>为什么推给你：</b><span>{badges}</span></div>
   </div>
