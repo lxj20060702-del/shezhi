@@ -316,12 +316,12 @@ def render():
         child = c2.radio("您有孩子需要在北京一起生活或照顾吗？", ["有", "没有"], horizontal=True)
         jobs = st.multiselect(
                 "你现在/最近做什么工作？（可多选，不确定可留空）",
-                options,
+                JOB_OPTIONS,
                 placeholder="请选择你的工作类型（可多选）"
                 )
         needs = st.multiselect(
                 "最想解决的问题？（可多选，建议1-2个）",
-                options,
+                JOB_OPTIONS,
                 placeholder="请选择你希望解决的问题"
                 )
         go = st.form_submit_button("为我推荐", use_container_width=True)
