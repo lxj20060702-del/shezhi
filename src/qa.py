@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""RAG 问答：检索 -> 组装证据 -> 大模型生成（带来源标注）-> 降级兜底。"""
+"""RAG 问答：检索 -> 组装证据 -> 大模型生成 -> 来源独立展示 -> 降级兜底。"""
 import re
 
 from retriever import BM25Retriever
@@ -38,10 +38,24 @@ class QA:
             docs = self.retriever.search(q, topk=topk)
 
         context = "\n\n".join(
-            f"【来源{i+1}】{d['title']}（{d['type']}｜来源：{d['source_name']} {d['source_url']}）\n{d['text']}"
-            for i, d in enumerate(docs)
+    f"资料{i+1}：{d['title']}（{d['type']}｜来源：{d['source_name']} {d['source_url']}）\n{d['text']}"
+    for i, d in enumerate(docs)
         )
-        user = f"【参考资料】\n{context}\n\n【用户问题】{q}\n\n请依据资料作答并不要输出任何来源编号，例如【来源1】【来源2】。"
+        user = f"""
+        【参考资料】
+
+        {context}
+
+        【用户问题】
+
+        {q}
+
+        请严格依据参考资料回答。
+        只输出给用户看的正文。
+        不要输出资料编号。
+        不要输出【来源1】、【来源2】等格式。
+        来源信息由系统单独展示。
+        """
 
         text = self.llm.chat(SYSTEM_PROMPT, user)
         if text and not text.startswith("[大模型调用失败"):
