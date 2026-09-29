@@ -13,7 +13,7 @@ SYSTEM_PROMPT = (
     "请严格依据【参考资料】回答，不要编造；若资料不足，请明确说明“资料中暂未收录”。"
     "用通俗、口语化、友善的中文回答，分点、简短。"
     "回答正文不要输出【来源1】【来源2】等引用编号。"
-    "来源由系统自动展示。"
+    "不要在正文中插入来源标记"
     "只负责回答问题。"
 )
 
@@ -41,7 +41,7 @@ class QA:
             f"【来源{i+1}】{d['title']}（{d['type']}｜来源：{d['source_name']} {d['source_url']}）\n{d['text']}"
             for i, d in enumerate(docs)
         )
-        user = f"【参考资料】\n{context}\n\n【用户问题】{q}\n\n请依据资料作答并标注【来源N】。"
+        user = f"【参考资料】\n{context}\n\n【用户问题】{q}\n\n请依据资料作答并不要输出任何来源编号，例如【来源1】【来源2】。"
 
         text = self.llm.chat(SYSTEM_PROMPT, user)
         if text and not text.startswith("[大模型调用失败"):
