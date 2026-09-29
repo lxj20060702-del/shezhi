@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """知识库加载：把 orgs / policies 打平成可检索文档。"""
 import json
+import streamlit as st
 from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
@@ -11,6 +12,7 @@ def _load(fn):
         return json.load(f)
 
 
+@st.cache_data
 def load_documents():
     """返回文档列表，每篇含 id/type/title/text/来源等字段。"""
     docs = []
