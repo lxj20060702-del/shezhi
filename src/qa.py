@@ -58,6 +58,11 @@ class QA:
         """
 
         text = self.llm.chat(SYSTEM_PROMPT, user)
+
+        if text:
+            # 清除大模型自动生成的来源标记
+            text = re.sub(r'【来源\d+】', '', text)
+            
         if text and not text.startswith("[大模型调用失败"):
             return {"route": route, "mode": "RAG+大模型", "answer": text, "sources": docs}
 
