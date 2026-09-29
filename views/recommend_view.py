@@ -280,6 +280,8 @@ def _card_html(idx, r):
     badges = " ".join(f"<code>{h}</code>" for h in r["reasons"][:6]) or "—"
     services = "、".join(o.get("services", [])) or "—"
     activities = "、".join(o.get("activities", [])[:6]) or "—"
+    intro = o.get("intro", "—")
+    join = o.get("join", "—")
     return f"""
 <div class="rec">
   <div class="rec-head">
