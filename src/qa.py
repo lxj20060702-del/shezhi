@@ -59,7 +59,7 @@ class QA:
         来源信息由系统单独展示。
         """
 
-        text = "测试111"
+        text = self.llm.chat(SYSTEM_PROMPT, user)
 
         # 清理大模型生成的引用标记
         if text:
