@@ -130,14 +130,14 @@ DISTRICTS = [
     ("tongzhou",  "通州区",   poly("R2","V","W","AA","Z","U"), 0, []),
 ]
 
-# 区组织简称 → (组织全称, 跳转链接)
+# 区组织简称 → (组织全称, 组织ID)
 ORG_LINKS = {
-    "木兰花开社工中心": ("北京木兰花开社工服务中心", "https://www.cnwomen.com.cn"),
-    "协作者社工中心":   ("北京市协作者社会工作发展中心", "https://www.facilitator.org.cn"),
-    "工友之家":         ("北京工友之家文化发展中心", "https://www.bv2008.cn"),
-    "农家女文化发展中心": ("北京农家女文化发展中心", "https://baike.so.com"),
-    "致诚法律援助":     ("北京致诚农民工法律援助与研究中心", "https://aiqicha.baidu.com"),
-    "义联劳动法援助":   ("北京义联劳动法援助与研究中心", "https://www.jobui.com"),
+    "木兰花开社工中心": ("北京木兰花开社工服务中心", "org_mulan"),
+    "协作者社工中心":   ("北京市协作者社会工作发展中心", "org_xiezuozhe"),
+    "工友之家":         ("北京工友之家文化发展中心", "org_gongyou"),
+    "农家女文化发展中心": ("北京农家女文化发展中心", "org_nongjianv"),
+    "致诚法律援助":     ("北京致诚农民工法律援助与研究中心", "org_zhicheng"),
+    "义联劳动法援助":   ("北京义联劳动法援助与研究中心", "org_yilian"),
 }
 
 
@@ -229,10 +229,10 @@ def _map_svg():
         srv_html = ""
         for s in services:
             if s in ORG_LINKS:
-                full_name, url = ORG_LINKS[s]
+                full_name, org_id = ORG_LINKS[s]
                 srv_html += (
                     f'<div class="bj-dc-srv">· '
-                    f'<a href="{url}" target="_blank" class="bj-dc-link">{full_name}</a>'
+                    f'<a href="?selected_org={org_id}" class="bj-dc-link">{full_name}</a>'
                     f'</div>'
                 )
             else:

@@ -52,6 +52,45 @@ with st.sidebar:
     st.divider()
     st.caption("免费方案：GLM-4-Flash / 硅基流动；检索层本地 BM25（jieba）。")
 
+# 组织详情展示（点击知识库地图中的组织名称后，跨标签页显示）
+selected_org_id = st.query_params.get("selected_org", None)
+if selected_org_id:
+    if isinstance(selected_org_id, list):
+        selected_org_id = selected_org_id[0]
+    org = next((o for o in orgs if o["id"] == selected_org_id), None)
+    if org:
+        st.markdown("---")
+        st.markdown(f"### 🏢 {org['name']}")
+        col1, col2 = st.columns([3, 2])
+        with col1:
+            st.markdown(f"**简介**：{org.get('intro', '')}")
+            st.markdown(f"**服务对象**：{org.get('target', '')}")
+            services = org.get("services", [])
+            if services:
+                st.markdown(f"**核心服务**：{'、'.join(services)}")
+            activities = org.get("activities", [])
+            if activities:
+                st.markdown(f"**工作/活动**：{'、'.join(activities)}")
+            if org.get("founded"):
+                st.markdown(f"**成立背景**：{org['founded']}")
+            if org.get("join"):
+                st.markdown(f"**如何参与**：{org['join']}")
+        with col2:
+            if org.get("tags"):
+                st.markdown("**标签**")
+                tag_html = " ".join(
+                    f'<span class="org-tag">{t}</span>' for t in org["tags"]
+                )
+                st.markdown(f'<div class="org-tags">{tag_html}</div>',
+                            unsafe_allow_html=True)
+            if org.get("contact") and org["contact"] != "见机构公开渠道":
+                st.markdown(f"📞 **联系方式**：{org['contact']}")
+            if org.get("source_url"):
+                st.markdown(f"📚 [了解更多（来源：{org.get('source_name', '')}）]({org['source_url']})")
+        if st.button("← 返回地图", key="back_to_map"):
+            st.query_params.clear()
+            st.rerun()
+
 t_qa, t_rec, t_graph, t_kb = st.tabs(["💬 智能问答", "🎯 为你推荐", "🕸️ 知识图谱", "📚 知识库"])
 
 with t_qa:

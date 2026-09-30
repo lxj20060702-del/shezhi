@@ -821,3 +821,20 @@ svg:hover .bj-label {
 .bj-dc-empty .bj-dc-count {
   color: var(--ink-faint);
 }
+
+/* 组织详情标签 */
+.org-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.org-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  background: #fde8ec;
+  color: #c95676;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
