@@ -57,6 +57,8 @@ def _haystack(item):
         " ".join(item.get("tags", [])),
         item.get("detail", ""),
         item.get("organizer", ""),
+        item.get("intro", ""),
+        item.get("join", ""),
     ]
     return " ".join(p for p in parts if p)
 

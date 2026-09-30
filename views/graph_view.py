@@ -11,6 +11,8 @@ import streamlit.components.v1 as components
 
 from graph import build_graph
 
+# 注意：这里用 __NODES__ / __EDGES__ 占位符替换，不要用 % 格式化
+# （模板里 CSS 的 100% 会和 Python 的 % 格式化冲突）
 _GRAPH_TPL = """
 <style>
   .graph-wrap {
@@ -20,7 +22,9 @@ _GRAPH_TPL = """
     box-shadow: 0 4px 16px rgba(116,169,197,.10), 0 1px 3px rgba(0,0,0,.04);
     background: linear-gradient(135deg, #f5f9fc 0%, #fdf6f4 100%);
   }
-  #net { width: 100%; height: 560px; }
+  #net { width: 100%; height: 760px; }
+  /* 清零 srcdoc 默认页边距，避免 iframe 内底部留白 */
+  html, body { margin: 0; padding: 0; }
 </style>
 <div class="graph-wrap"><div id="net"></div></div>
 <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
@@ -28,6 +32,8 @@ _GRAPH_TPL = """
 (function(){
   const nodes = new vis.DataSet(__NODES__);
   const edges = new vis.DataSet(__EDGES__);
+  // 色卡：#74A9C5 #C2E5CF #EDDDAB #F2B8AE #DD7389
+  // 玻璃珠质感：十六进制底色 + opacity 透感 + 同色边框 + 柔和阴影
   const groups = {
     "组织":    {color:{background:"#74A9C5",border:"#5a8fae",highlight:{background:"#74A9C5",border:"#3d7291"},hover:{background:"#74A9C5",border:"#5a8fae"}}, borderWidth:2, opacity:0.82},
     "项目":    {color:{background:"#EDDDAB",border:"#d4c089",highlight:{background:"#EDDDAB",border:"#b89f60"},hover:{background:"#EDDDAB",border:"#d4c089"}}, borderWidth:2, opacity:0.82},
@@ -36,44 +42,86 @@ _GRAPH_TPL = """
     "人群标签":{color:{background:"#DD7389",border:"#c2566d",highlight:{background:"#DD7389",border:"#9e3d54"},hover:{background:"#DD7389",border:"#c2566d"}}, borderWidth:2, opacity:0.82}
   };
   const container = document.getElementById("net");
-  const isMobile = window.innerWidth <= 640;
-  const netH = isMobile ? 420 : 560;
-  container.style.height = netH + "px";
-  try {
-    const frame = window.frameElement;
-    if (frame) frame.style.height = (netH + 24) + "px";
-  } catch(e){}
 
-  const network = new vis.Network(container, {nodes:nodes, edges:edges}, {
-    nodes:{
-      shape:"dot",
-      font:{size: isMobile?12:14, color:"#3a4a4d", face:"sans-serif",
-            strokeWidth:3, strokeColor:"rgba(255,255,255,.85)"},
-      scaling:{min: isMobile?10:8, max: isMobile?24:26},
-      shadow:{enabled:true, color:"rgba(80,90,100,.38)", size:14, x:0, y:8}
-    },
-    edges:{
-      color:{color:"rgba(194,229,207,.65)", highlight:"#74A9C5", hover:"#C2E5CF"},
-      font:{size: isMobile?9:10, align:"middle", color:"#7a8a8d",
-            strokeWidth:3, strokeColor:"rgba(255,255,255,.9)"},
-      smooth:{type:"continuous"},
-      arrows:{to:{enabled:true, scaleFactor:0.7}}
-    },
-    groups: groups,
-    physics:{
-      stabilization:true,
-      barnesHut:{
-        springLength: isMobile?110:140,
-        gravitationalConstant:-3000,
-        centralGravity:0.45
+  function initGraph() {
+    // 按 iframe 内宽判定：阈值取 480，普通桌面窗口（内宽 600+）走桌面参数
+    const isMobile = window.innerWidth <= 480;
+    // 手机端缩小高度；桌面端加高以铺满首屏；body 页边距已清零，外框仅多出 2px 边框
+    const netH = isMobile ? 420 : 760;
+    const frameH = netH + 2;
+    container.style.height = netH + "px";
+    try {
+      // 同步 iframe 自身与其父容器高度：父容器默认保留 components.html
+      // 的初始高度，不一起收缩会在图谱与图例之间留下大片空白
+      const frame = window.frameElement;
+      if (frame) {
+        frame.style.height = frameH + "px";
+        const host = frame.parentElement;
+        if (host) {
+          // 父容器默认带 flex:0 0 <初始高度>，只改 height 会被 flex-basis 压过
+          host.style.setProperty("height", frameH + "px", "important");
+          host.style.setProperty("flex", "0 0 " + frameH + "px", "important");
+          host.style.setProperty("min-height", "0", "important");
+        }
       }
-    },
-    interaction:{hover:true, dragNodes:true, dragView:true, zoomView:true}
-  });
+    } catch(e){}
 
-  network.once("stabilizationIterationsDone", function() {
-    network.fit({animation: {duration: 600, easingFunction: "easeInOutQuad"}});
-  });
+    const network = new vis.Network(container, {nodes:nodes, edges:edges}, {
+      nodes:{
+        shape:"dot",
+        font:{size: isMobile?12:14, color:"#3a4a4d", face:"sans-serif",
+              strokeWidth:3, strokeColor:"rgba(255,255,255,.85)"},
+        scaling:{min: isMobile?10:8, max: isMobile?24:26},
+        shadow:{enabled:true, color:"rgba(80,90,100,.38)", size:14, x:0, y:8}
+      },
+      edges:{
+        color:{color:"rgba(194,229,207,.65)", highlight:"#74A9C5", hover:"#C2E5CF"},
+        font:{size: isMobile?9:10, align:"middle", color:"#7a8a8d",
+              strokeWidth:3, strokeColor:"rgba(255,255,255,.9)"},
+        smooth:{type:"continuous"},
+        arrows:{to:{enabled:true, scaleFactor:0.7}}
+      },
+      groups: groups,
+      physics:{
+        // 迭代次数多一点，布局收敛更充分，每次加载形态更稳定
+        stabilization:{iterations:1500},
+        barnesHut:{
+          springLength: isMobile?110:140,
+          gravitationalConstant:-3000,
+          centralGravity:0.45
+        }
+      },
+      interaction:{hover:true, dragNodes:true, dragView:true, zoomView:true}
+    });
+
+    // 物理稳定后先锁定布局再定位：物理引擎不关，定位之后节点会继续
+    // 漂移，导致初始视图偏左；锁定后视图即最终效果
+    network.once("stabilizationIterationsDone", function() {
+      network.setOptions({physics: {enabled: false}});
+      // 默认 fit 会把右侧离群节点也纳入视野，节点团被压小、右侧留白大；
+      // 改为以节点包围盒中心为视图中心并额外放大 15%，图谱更饱满
+      const bb = network.getBoundingBox();
+      const cx = (bb.left + bb.right) / 2, cy = (bb.top + bb.bottom) / 2;
+      const scale = Math.min(container.clientWidth / (bb.right - bb.left),
+                             container.clientHeight / (bb.bottom - bb.top)) * 1.15;
+      network.moveTo({position: {x: cx, y: cy}, scale: scale,
+                      animation: {duration: 600, easingFunction: "easeInOutQuad"}});
+    });
+  }
+
+  // 图谱 tab 未激活时 iframe 处于隐藏状态，innerWidth 为 0，
+  // 此刻初始化会被误判成手机模式（420px 高、小字号）；
+  // 轮询等待 iframe 可见后再初始化，桌面才能拿到 760px 加高区块
+  if (window.innerWidth === 0) {
+    const timer = setInterval(function() {
+      if (window.innerWidth > 0) {
+        clearInterval(timer);
+        initGraph();
+      }
+    }, 300);
+  } else {
+    initGraph();
+  }
 })();
 </script>
 """
@@ -83,6 +131,7 @@ def _inject_style():
     """图谱页专属样式：统计卡片 + 图例 + 提示区块 + 手机端适配。"""
     st.markdown("""
 <style>
+  /* ---------- 顶部统计卡片 ---------- */
   .graph-stats {
     display: flex;
     gap: 12px;
@@ -123,12 +172,13 @@ def _inject_style():
     margin-top: 2px;
   }
 
+  /* ---------- 图例区块 ---------- */
   .graph-legend-wrap {
     background: linear-gradient(135deg, #f7fbfc 0%, #fdf6f4 100%);
     border: 1px solid #e0e8ec;
     border-radius: 12px;
     padding: 12px 18px;
-    margin-top: 14px;
+    margin-top: 6px;
   }
   .graph-legend {
     display: flex;
@@ -151,6 +201,7 @@ def _inject_style():
     box-shadow: inset 0 1px 2px rgba(255,255,255,.5), 0 1px 2px rgba(0,0,0,.08);
   }
 
+  /* ---------- 交互提示区块 ---------- */
   .graph-tips {
     display: flex;
     gap: 10px;
@@ -178,20 +229,33 @@ def _inject_style():
     font-size: .8rem;
   }
   @media (max-width: 640px) {
+    /* 统计卡片：紧凑排列，3列等宽 */
     .graph-stats { gap: 8px; margin-bottom: 12px; }
     .graph-stat-card { padding: 10px 6px; min-width: 0; flex: 1 1 30%; border-radius: 10px; }
     .graph-stat-num { font-size: 1.25rem; }
     .graph-stat-label { font-size: .7rem; margin-top: 1px; }
     .graph-stat-card::before { height: 2.5px; }
+    /* 图谱容器：减小圆角阴影 */
     .graph-wrap { border-radius: 12px; }
-    .graph-legend-wrap { padding: 10px 12px; margin-top: 10px; border-radius: 10px; }
+    /* 图例区块 */
+    .graph-legend-wrap { padding: 10px 12px; margin-top: 4px; border-radius: 10px; }
     .graph-legend { font-size: .76rem; gap: 4px 12px; }
     .graph-legend-item { gap: 4px; }
     .graph-legend-dot { width: 9px; height: 9px; border-width: 1px; }
+    /* 交互提示：图标和文字缩小 */
     .graph-tips { gap: 6px; margin-top: 10px; }
     .graph-tip-item { font-size: .7rem; padding: 3px 10px; gap: 4px; }
     .graph-tip-icon { font-size: .85rem; }
+    /* 底部信息 */
     .graph-meta { font-size: .72rem; margin-top: 8px; line-height: 1.5; }
+    /* 问答输入框：提示语在窄屏换成两行时留足高度，避免第二行被发送按钮遮挡裁切 */
+    [data-testid="stChatInput"] textarea { min-height: 70px; }
+    /* 禁止页面整体左右滑动：窄屏下溢出元素会让外框可横向拖动，
+       锁住横向滚动后只保留市面上 App 的上下滑动形式 */
+    html, body { overflow-x: hidden; overscroll-behavior-x: none; }
+    [data-testid="stAppViewContainer"],
+    [data-testid="stMain"],
+    [data-testid="stMainBlockContainer"] { overflow-x: hidden; max-width: 100vw; }
   }
 </style>
 """, unsafe_allow_html=True)
@@ -209,6 +273,7 @@ def render():
     edges = [{"from": e["from"], "to": e["to"], "label": e["label"],
               "arrows": "to"} for e in g["edges"]]
 
+    # 统计卡片
     org_count = sum(1 for n in g["nodes"] if n["type"] == "组织")
     st.markdown(f"""
 <div class="graph-stats">
@@ -230,7 +295,7 @@ def render():
     html = (_GRAPH_TPL
             .replace("__NODES__", json.dumps(nodes, ensure_ascii=False))
             .replace("__EDGES__", json.dumps(edges, ensure_ascii=False)))
-    components.html(html, height=600)
+    components.html(html, height=762)
 
     legend_items = [
         ("#74A9C5", "组织"),

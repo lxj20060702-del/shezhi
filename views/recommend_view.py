@@ -23,7 +23,6 @@ def _inject_style():
   --pink-soft: #FDF0F3;
   --sakura: #F2A6B8;  /* 樱花粉（表单选中色） */
   --cream: #F5EFE6;   /* 米白色（multiselect 标签底） */
-  --tag-color: #C38380;  /* 标签与箭头颜色（暖棕粉） */
 }
 
 /* ---------- 表单组件配色覆盖（仅本页） ---------- */
@@ -37,41 +36,26 @@ div[role="radiogroup"] input[type="radio"] {
   accent-color: var(--sakura) !important;
 }
 
-/* multiselect 已选标签 → 米白底 + 无边框 + #C38380 字 */
+/* multiselect 已选标签 → 米白底 + 深棕字 */
 div.stMultiSelect [data-baseweb="tag"],
 div.stMultiSelect [role="group"] > span {
   background: var(--cream) !important;
-  border: none !important;
+  border: 1px solid var(--brown-line) !important;
   border-radius: 6px !important;
 }
 div.stMultiSelect [data-baseweb="tag"] span,
 div.stMultiSelect [role="group"] > span span {
-  color: var(--tag-color) !important;
+  color: var(--brown-dark) !important;
   font-size: .85rem;
 }
 div.stMultiSelect [data-baseweb="tag"] [data-baseweb="tag-close-icon"],
 div.stMultiSelect [role="group"] > span [aria-label*="remove"] {
-  color: var(--tag-color) !important;
+  color: var(--brown-dark) !important;
 }
 div.stMultiSelect [data-baseweb="tag"] svg,
 div.stMultiSelect [role="group"] svg {
-  fill: var(--tag-color) !important;
-  stroke: var(--tag-color) !important;
-}
-/* multiselect 下拉展开箭头 → 去方框 + #C38380 */
-div.stMultiSelect [data-baseweb="select"] button,
-div.stMultiSelect [data-testid="stMultiSelect"] button {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-div.stMultiSelect svg {
-  color: var(--tag-color) !important;
-  fill: var(--tag-color) !important;
-  stroke: var(--tag-color) !important;
-}
-div.stMultiSelect [data-baseweb="select"] {
-  border-color: var(--brown-line) !important;
+  fill: var(--brown-dark) !important;
+  stroke: var(--brown-dark) !important;
 }
 /* multiselect 下拉面板选中项 */
 div.stMultiSelect [data-baseweb="menu"] [role="option"][aria-selected="true"],
@@ -109,6 +93,7 @@ button[kind="secondaryFormSubmit"]:hover {
   transition: box-shadow .25s ease, transform .25s ease, border-color .25s ease;
   overflow: hidden;
 }
+/* 左侧棕色装饰条 */
 .rec::before {
   content: "";
   position: absolute;
@@ -123,6 +108,7 @@ button[kind="secondaryFormSubmit"]:hover {
   border-color: var(--brown);
 }
 
+/* ---------- 卡片头部 ---------- */
 .rec-head {
   display: flex;
   align-items: center;
@@ -162,6 +148,7 @@ button[kind="secondaryFormSubmit"]:hover {
   white-space: nowrap;
 }
 
+/* ---------- 信息行 ---------- */
 .rec-line {
   font-size: .9rem;
   color: #444;
@@ -176,6 +163,7 @@ button[kind="secondaryFormSubmit"]:hover {
   font-weight: 600;
   flex-shrink: 0;
 }
+/* 标签：粉色底 + 深棕字，适配棕色主题并增加点缀 */
 .rec-line code {
   background: var(--pink-soft);
   color: var(--brown-dark);
@@ -188,6 +176,7 @@ button[kind="secondaryFormSubmit"]:hover {
   display: inline-block;
 }
 
+/* ---------- "为什么推给你"区块 ---------- */
 .rec-reason {
   background: var(--brown-soft);
   border: 1px solid var(--brown-line);
@@ -196,12 +185,14 @@ button[kind="secondaryFormSubmit"]:hover {
   margin: 10px 0 4px;
 }
 
+/* ---------- 分隔线 ---------- */
 .rec-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--brown-line), transparent);
   margin: 12px 0;
 }
 
+/* ---------- 推荐统计区块 ---------- */
 .rec-stats {
   display: flex;
   gap: 12px;
@@ -231,6 +222,7 @@ button[kind="secondaryFormSubmit"]:hover {
 }
 .rec-stat-card:nth-child(2) .rec-stat-num { color: var(--pink); }
 
+/* ---------- 底部信息 ---------- */
 .rec-foot {
   margin-top: 4px;
   padding-top: 10px;
@@ -249,6 +241,7 @@ button[kind="secondaryFormSubmit"]:hover {
   color: #C25A72;
 }
 
+/* ---------- 推荐结果摘要区块 ---------- */
 .rec-summary {
   background: linear-gradient(135deg, var(--brown-soft) 0%, var(--pink-soft) 100%);
   border: 1px solid var(--brown-line);
@@ -263,6 +256,7 @@ button[kind="secondaryFormSubmit"]:hover {
   color: var(--brown);
 }
 
+/* ---------- 手机端（≤640px） ---------- */
 @media (max-width: 640px) {
   .rec { padding: 14px 16px 14px 20px; margin: 10px 0; border-radius: 14px; }
   .rec-name { font-size: 1rem; }
@@ -286,6 +280,8 @@ def _card_html(idx, r):
     badges = " ".join(f"<code>{h}</code>" for h in r["reasons"][:6]) or "—"
     services = "、".join(o.get("services", [])) or "—"
     activities = "、".join(o.get("activities", [])[:6]) or "—"
+    intro = o.get("intro", "—")
+    join = o.get("join", "—")
     return f"""
 <div class="rec">
   <div class="rec-head">
@@ -296,6 +292,8 @@ def _card_html(idx, r):
   <div class="rec-line"><span>👥</span><b>服务对象：</b><span>{o.get('target', '')}</span></div>
   <div class="rec-line"><span>🧰</span><b>能提供：</b><span>{services}</span></div>
   <div class="rec-line"><span>🎈</span><b>主要活动：</b><span>{activities}</span></div>
+  <div class="rec-line"><span>📖</span><b>机构简介：</b><span>{intro}</span></div>
+  <div class="rec-line"><span>🙋</span><b>参与方式：</b><span>{join}</span></div>
   <div class="rec-reason">
     <div class="rec-line"><span>💡</span><b>为什么推给你：</b><span>{badges}</span></div>
   </div>
@@ -315,9 +313,17 @@ def render():
     with st.form("rec_form"):
         c1, c2 = st.columns(2)
         gender = c1.radio("性别", ["女", "男", "不方便说"], horizontal=True)
-        child = c2.radio("有孩子要在北京带着吗？", ["有", "没有"], horizontal=True)
-        jobs = st.multiselect("你现在 / 最近做什么工作？（可多选，不确定可留空）", JOB_OPTIONS)
-        needs = st.multiselect("最想解决的问题？（可多选，建议 1–2 个）", NEED_OPTIONS)
+        child = c2.radio("您有孩子需要在北京一起生活或照顾吗？", ["有", "没有"], horizontal=True)
+        jobs = st.multiselect(
+                "你现在/最近做什么工作？（可多选，不确定可留空）",
+                JOB_OPTIONS,
+                placeholder="请选择你的工作类型（可多选）"
+                )
+        needs = st.multiselect(
+                "最想解决的问题？（可多选，建议1-2个）",
+                JOB_OPTIONS,
+                placeholder="请选择你希望解决的问题"
+                )
         go = st.form_submit_button("为我推荐", use_container_width=True)
 
     if go:
@@ -336,6 +342,7 @@ def render():
     res = recommend(profile)
     st.markdown(f'<div class="rec-summary"><b>🎯 推荐结果</b>：{summarize(profile, res)}</div>', unsafe_allow_html=True)
 
+    # 推荐统计区块
     org_count = len(res["orgs"])
     max_score = max((r["score"] for r in res["orgs"]), default=0)
     st.markdown(f"""
@@ -368,7 +375,7 @@ def render():
             st.markdown(
                 f"**{p['name']}**（{p.get('organizer', '')}，{p.get('since', '')}）<br>"
                 f"<span style='color:#666;font-size:.88rem'>{p.get('detail', '')}　"
-                f"来源：<a href="{p.get('source_url', '')}" target="_blank">{p.get('source_name', '')}</a></span>",
+                f"来源：<a href=\"{p.get('source_url', '')}\" target=\"_blank\">{p.get('source_name', '')}</a></span>",
                 unsafe_allow_html=True)
 
     st.divider()

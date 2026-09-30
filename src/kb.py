@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """知识库加载：把 orgs / policies 打平成可检索文档。"""
 import json
+import streamlit as st
 from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
@@ -11,6 +12,7 @@ def _load(fn):
         return json.load(f)
 
 
+@st.cache_data
 def load_documents():
     """返回文档列表，每篇含 id/type/title/text/来源等字段。"""
     docs = []
@@ -24,6 +26,8 @@ def load_documents():
             "活动：" + "、".join(o.get("activities", [])),
             f"成立：{o.get('founded','')}",
             "标签：" + "、".join(o.get("tags", [])),
+            f"简介：{o.get('intro','')}",
+            f"参与方式：{o.get('join','')}",
         ])
         docs.append({
             "id": o["id"], "type": "组织", "title": o["name"],

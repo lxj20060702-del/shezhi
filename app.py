@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
 
 import kb  # noqa: E402
-from qa import QA  # noqa: E402
+from src.qa import QA  # noqa: E402
 from views import qa_view, recommend_view, graph_view, kb_view  # noqa: E402
 
 st.set_page_config(page_title="她知 · 公益知识问答", page_icon="🌸", layout="wide")

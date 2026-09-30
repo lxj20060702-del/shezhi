@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""RAG 问答：检索 -> 组装证据 -> 大模型生成（带来源标注）-> 降级兜底。"""
+"""RAG 问答：检索 -> 组装证据 -> 大模型生成 -> 来源独立展示 -> 降级兜底。"""
 import re
 
 from retriever import BM25Retriever
@@ -10,9 +10,13 @@ ORG_HINT = ["组织", "机构", "活动", "文艺", "参加", "联系", "有哪�
 
 SYSTEM_PROMPT = (
     "你是“她知”，面向北京流动女性的公益知识助手。"
-    "请严格依据【参考资料】回答，不要编造；若资料不足，请明确说明“资料中暂未收录”。"
-    "用通俗、口语化、友善的中文回答，分点、简短。"
-    "每条关键信息后用【来源N】标注依据。政策类必须与官方口径一致。"
+    "请严格依据【参考资料】回答，不要编造。"
+    "回答使用自然语言，不使用任何引用格式。"
+    "禁止输出以下内容："
+    "【来源1】、【来源2】、[来源1]、(来源1)。"
+    "不要解释来源，不要生成参考文献列表。"
+    "来源由系统页面单独展示。"
+    "回答简洁、友善、分点。"
 )
 
 
@@ -36,12 +40,35 @@ class QA:
             docs = self.retriever.search(q, topk=topk)
 
         context = "\n\n".join(
-            f"【来源{i+1}】{d['title']}（{d['type']}｜来源：{d['source_name']} {d['source_url']}）\n{d['text']}"
-            for i, d in enumerate(docs)
+    f"【资料{i+1}】：{d['title']}（{d['type']}｜来源：{d['source_name']} {d['source_url']}）\n{d['text']}"
+    for i, d in enumerate(docs)
         )
-        user = f"【参考资料】\n{context}\n\n【用户问题】{q}\n\n请依据资料作答并标注【来源N】。"
+        user = f"""
+        【参考资料】
+
+        {context}
+
+        【用户问题】
+
+        {q}
+
+        请严格依据参考资料回答。
+        只输出给用户看的正文。
+        不要输出资料编号。
+        不要输出【来源1】、【来源2】等格式。
+        来源信息由系统单独展示。
+        """
 
         text = self.llm.chat(SYSTEM_PROMPT, user)
+
+        # 清理大模型生成的引用标记
+        if text:
+            text = re.sub(r'【来源\s*\d+】', '', text)
+            text = re.sub(r'\[来源\s*\d+\]', '', text)
+            text = re.sub(r'来源\s*\d+', '', text)
+            text = re.sub(r'\(来源\s*\d+\)', '', text)
+            text = re.sub(r'（来源\s*\d+）', '', text)
+            
         if text and not text.startswith("[大模型调用失败"):
             return {"route": route, "mode": "RAG+大模型", "answer": text, "sources": docs}
 
