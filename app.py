@@ -31,7 +31,7 @@ st.markdown(f"<style>{(ROOT / 'assets' / 'style.css').read_text(encoding='utf-8'
             unsafe_allow_html=True)
 
 st.markdown('<p class="big-title">🌸 她知</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub">面向北京流动女性的公益垂直知识问答系统 · 政策与公益资源可溯源</p>',
+st.markdown('<p class="sub">面向北京流动女性的公益垂直知识问答系统</p>',
             unsafe_allow_html=True)
 
 
