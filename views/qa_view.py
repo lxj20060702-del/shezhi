@@ -24,7 +24,7 @@ def render(qa):
 
     st.markdown('<p class="qa-ask">✍️ 在这里提问</p>', unsafe_allow_html=True)
     q = st.chat_input("说说你想了解什么～她知帮你找答案 🌸")
-    st.markdown('<p style="text-align:center;color:#888;font-size:0.85rem;margin-top:-8px;">🔗 政策与公益资源可溯源</p>',
+    st.markdown('<p style="text-align:left;color:#888;font-size:0.85rem;margin-top:-8px;">🔗 政策与公益资源可溯源</p>',
                 unsafe_allow_html=True)
     if example:
         q = example
