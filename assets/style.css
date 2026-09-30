@@ -239,7 +239,7 @@ section[data-testid="stSidebar"] span {
 [data-testid="stChatInput"]::after {
   content: "🔗 政策与公益资源可溯源";
   position: absolute;
-  bottom: -22px;
+  bottom: -30px;
   left: 4px;
   color: #888;
   font-size: 0.85rem;
