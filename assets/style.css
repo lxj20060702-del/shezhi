@@ -232,6 +232,21 @@ section[data-testid="stSidebar"] span {
   animation: fadeUp 0.5s var(--ease) 0.05s both;
 }
 
+/* 搜索框下方的"政策与公益资源可溯源"提示 */
+[data-testid="stChatInput"] {
+  position: relative;
+}
+[data-testid="stChatInput"]::after {
+  content: "🔗 政策与公益资源可溯源";
+  position: absolute;
+  bottom: -22px;
+  left: 4px;
+  color: #888;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 /* Streamlit 标题/副标题统一文字色 */
 h1, h2, h3, h4, h5, h6 {
   color: var(--ink) !important;
