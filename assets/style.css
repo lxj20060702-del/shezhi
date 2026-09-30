@@ -805,6 +805,16 @@ svg:hover .bj-label {
   color: var(--ink-faint);
   line-height: 1.5;
 }
+.bj-dc-link {
+  color: var(--brand);
+  text-decoration: none;
+  border-bottom: 1px dashed transparent;
+  transition: all 0.2s ease;
+}
+.bj-dc-link:hover {
+  color: #c95676;
+  border-bottom-color: #c95676;
+}
 .bj-dc-empty {
   opacity: 0.55;
 }

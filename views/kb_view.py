@@ -130,6 +130,16 @@ DISTRICTS = [
     ("tongzhou",  "通州区",   poly("R2","V","W","AA","Z","U"), 0, []),
 ]
 
+# 区组织简称 → (组织全称, 跳转链接)
+ORG_LINKS = {
+    "木兰花开社工中心": ("北京木兰花开社工服务中心", "https://www.cnwomen.com.cn"),
+    "协作者社工中心":   ("北京市协作者社会工作发展中心", "https://www.facilitator.org.cn"),
+    "工友之家":         ("北京工友之家文化发展中心", "https://www.bv2008.cn"),
+    "农家女文化发展中心": ("北京农家女文化发展中心", "https://baike.so.com"),
+    "致诚法律援助":     ("北京致诚农民工法律援助与研究中心", "https://aiqicha.baidu.com"),
+    "义联劳动法援助":   ("北京义联劳动法援助与研究中心", "https://www.jobui.com"),
+}
+
 
 # ============================================================
 # 🎨 粉色系配色阶梯（柔和、女性向、和谐）
@@ -171,8 +181,8 @@ def _map_svg():
     """生成粉色系 Choropleth 北京地图"""
     polygons = ""
     labels = ""
-    cards_html = ""
 
+    # 地图多边形 + 区名标签（保持地理顺序，不影响地图形状）
     for did, name, path_d, count, services in DISTRICTS:
         cx, cy = _centroid(path_d)
         fill = _count_to_color(count)
@@ -192,20 +202,6 @@ def _map_svg():
             f'<text x="{cx}" y="{cy+4}" class="bj-label">{name}</text>'
         )
 
-        # 下方统计卡片
-        has_data = count > 0
-        srv_html = ""
-        for s in services[:3]:
-            srv_html += f'<div class="bj-dc-srv">· {s}</div>'
-        cls = "bj-dc" if has_data else "bj-dc bj-dc-empty"
-        cards_html += (
-            f'<div class="{cls}" style="border-left:3px solid {fill}">'
-            f'<div class="bj-dc-name">{name}</div>'
-            f'<div class="bj-dc-count">{count} 家公益组织</div>'
-            f'{srv_html}'
-            f'</div>'
-        )
-
     svg = (
         f'<svg class="bj-map-svg" viewBox="0 0 600 520" xmlns="http://www.w3.org/2000/svg">'
         f'{polygons}'
@@ -223,6 +219,32 @@ def _map_svg():
         '<span class="bj-legend-max">4+</span>'
         '</div>'
     )
+
+    # 下方统计卡片：按组织数量从多到少排序，组织名称带超链接
+    sorted_districts = sorted(DISTRICTS, key=lambda d: d[3], reverse=True)
+    cards_html = ""
+    for did, name, path_d, count, services in sorted_districts:
+        fill = _count_to_color(count)
+        has_data = count > 0
+        srv_html = ""
+        for s in services:
+            if s in ORG_LINKS:
+                full_name, url = ORG_LINKS[s]
+                srv_html += (
+                    f'<div class="bj-dc-srv">· '
+                    f'<a href="{url}" target="_blank" class="bj-dc-link">{full_name}</a>'
+                    f'</div>'
+                )
+            else:
+                srv_html += f'<div class="bj-dc-srv">· {s}</div>'
+        cls = "bj-dc" if has_data else "bj-dc bj-dc-empty"
+        cards_html += (
+            f'<div class="{cls}" style="border-left:3px solid {fill}">'
+            f'<div class="bj-dc-name">{name}</div>'
+            f'<div class="bj-dc-count">{count} 家公益组织</div>'
+            f'{srv_html}'
+            f'</div>'
+        )
 
     return (
         '<div class="bj-map-card">'
