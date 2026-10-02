@@ -88,8 +88,25 @@ if selected_org_id:
             if org.get("source_url"):
                 st.markdown(f"📚 [了解更多（来源：{org.get('source_name', '')}）]({org['source_url']})")
         if st.button("← 返回地图", key="back_to_map"):
+            st.session_state["switch_to_kb"] = True
             st.query_params.clear()
             st.rerun()
+
+# 从组织详情返回时，自动切换到知识库标签页并滚动到地图
+if st.session_state.get("switch_to_kb", False):
+    st.components.v1.html("""
+    <script>
+    setTimeout(function() {
+        var tabs = window.parent.document.querySelectorAll('[role="tab"]');
+        if (tabs.length >= 4) tabs[3].click();
+        setTimeout(function() {
+            var mapTitle = window.parent.document.querySelector('.bj-map-title');
+            if (mapTitle) mapTitle.scrollIntoView({behavior: 'smooth'});
+        }, 400);
+    }, 200);
+    </script>
+    """, height=0)
+    st.session_state["switch_to_kb"] = False
 
 t_qa, t_rec, t_graph, t_kb = st.tabs(["💬 智能问答", "🎯 为你推荐", "🕸️ 知识图谱", "📚 知识库"])
 
