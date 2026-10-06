@@ -21,6 +21,16 @@ ORG_HINT = [
     "中心", "哪里有", "哪家", "找到", "找谁", "哪里能",
     "家政", "鸿雁", "同心", "打工妹", "木兰", "协作者", "工友之家",
     "爱心超市", "合唱团", "互助", "姐妹", "志愿者",
+    # 公益项目/计划触发词（与政策类“创业/培训”区分：这些是可参加的公益项目）
+    "项目", "公益项目", "春蕾", "母亲健康快车", "他乡的你", "巾帼贷款",
+    "贷款项目", "助学", "捐赠", "帮扶计划",
+]
+
+# 项目强锚点：只要命中具体公益项目名，无论句子里是否带“怎么/申请”等功能词，
+# 一律走资源侧，避免被政策功能词错误拽回政策库。
+PROJECT_ANCHORS = [
+    "春蕾", "母亲健康快车", "他乡的你", "家庭成长计划",
+    "巾帼贷款", "妇女创业担保贷款", "金融支持妇女", "农村妇女创新创业",
 ]
 
 SYSTEM_PROMPT = (
@@ -39,6 +49,9 @@ SYSTEM_PROMPT = (
 
 
 def _is_policy(q):
+    # 明确提到具体公益项目名 → 资源侧（优先级最高）
+    if any(a in q for a in PROJECT_ANCHORS):
+        return False
     return sum(h in q for h in POLICY_HINT) >= sum(h in q for h in ORG_HINT)
 
 
@@ -48,12 +61,16 @@ class QA:
         self.llm = LLM()
 
     def _route(self, q):
-        """政策类走政策库，组织类走组织库。"""
-        return "政策" if _is_policy(q) else "组织"
+        """政策类走政策库；资源类同时检索公益组织与公益项目。"""
+        return "政策" if _is_policy(q) else "资源"
 
     def answer(self, q, topk=4):
         route = self._route(q)
-        docs = self.retriever.search(q, doc_type=route, topk=topk)
+        if route == "政策":
+            doc_type = ("政策",)
+        else:
+            doc_type = ("组织", "项目")  # 组织与公益项目同属“社会资源”，一并打分
+        docs = self.retriever.search(q, doc_type=doc_type, topk=topk)
         if not docs:
             docs = self.retriever.search(q, topk=topk)
 
@@ -109,6 +126,13 @@ class QA:
                     lines.append("· 所需材料：" + "、".join(raw["materials"]))
                 if raw.get("caveat"):
                     lines.append("⚠️ " + raw["caveat"])
+            elif d["type"] == "项目":
+                if raw.get("organizer"):
+                    lines.append("· 主办单位：" + str(raw["organizer"]))
+                if raw.get("since"):
+                    lines.append("· 启动时间：" + str(raw["since"]))
+                if raw.get("detail"):
+                    lines.append("· 项目介绍：" + str(raw["detail"]))
             else:
                 lines.append("· 服务对象：" + str(raw.get("target", "")))
                 if raw.get("services"):
