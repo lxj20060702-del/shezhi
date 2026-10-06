@@ -33,6 +33,47 @@ PROJECT_ANCHORS = [
     "巾帼贷款", "妇女创业担保贷款", "金融支持妇女", "农村妇女创新创业",
 ]
 
+# 弱命中阈值：top1 原始 BM25 分低于此值，视为知识库无高度相关内容（实测标定）。
+WEAK_SCORE = 6.0
+
+_GREETINGS = {
+    "你好", "您好", "hi", "hello", "哈喽", "嗨", "在吗", "在么", "早",
+    "早上好", "晚上好", "谢谢", "感谢", "再见", "拜拜", "你是谁", "你叫什么",
+}
+
+GUIDE_REPLY = "\n".join([
+    "你好呀，我是“她知”，专注为在北京生活的流动女性解答政策与公益服务问题。",
+    "你可以这样问我，例如：",
+    "· 老板拖欠工资怎么办",
+    "· 我被老公打了，怎么保护自己",
+    "· 孩子在北京上学需要什么材料",
+    "· 北京有哪些帮助流动女性的公益组织",
+    "遇到紧急危险，请直接拨打 12338 妇女维权热线或 110 报警。",
+])
+
+WEAK_REPLY = "\n".join([
+    "抱歉，关于这个问题，我的知识库里暂时没有找到高度相关的权威信息，为了不给你错误的建议，我不做猜测。你可以：",
+    "· 拨打 12345 市民服务热线咨询各类生活与政务问题；",
+    "· 涉及妇女权益可拨打 12338 妇女维权公益服务热线；",
+    "· 换个更具体的说法再问我一次。",
+    "下方是相关性较弱的资料，仅供参考。",
+])
+
+
+def _is_meaningless(q):
+    """识别空输入、纯数字/标点、过短无中文、寒暄等无检索意义的内容。"""
+    if not q:
+        return True
+    if q.lower() in _GREETINGS:
+        return True
+    has_cjk = bool(re.search(r"[一-鿿]", q))
+    if not has_cjk and len(q) < 6:
+        return True
+    if not re.search(r"[一-鿿a-zA-Z]", q):
+        return True
+    return False
+
+
 SYSTEM_PROMPT = (
     "你是“她知”，面向北京流动女性的公益知识助手。"
     "请严格依据【参考资料】回答，不要编造。"
@@ -65,14 +106,26 @@ class QA:
         return "政策" if _is_policy(q) else "资源"
 
     def answer(self, q, topk=4):
+        q = (q or "").strip()
+
+        # ① 无意义/寒暄输入：给出使用引导，不检索、不调用大模型
+        if _is_meaningless(q):
+            return {"route": "寒暄", "mode": "使用引导", "answer": GUIDE_REPLY, "sources": []}
+
         route = self._route(q)
         if route == "政策":
             doc_type = ("政策",)
         else:
             doc_type = ("组织", "项目")  # 组织与公益项目同属“社会资源”，一并打分
-        docs = self.retriever.search(q, doc_type=doc_type, topk=topk)
-        if not docs:
-            docs = self.retriever.search(q, topk=topk)
+        scored = self.retriever.search_with_scores(q, doc_type=doc_type, topk=topk)
+        if not scored:
+            scored = self.retriever.search_with_scores(q, topk=topk)
+        docs = [d for d, _ in scored]
+
+        # ② 弱命中：top1 分数过低说明无高度相关内容，诚实兜底而非硬答
+        top1 = scored[0][1] if scored else 0.0
+        if top1 < WEAK_SCORE:
+            return {"route": route, "mode": "弱命中兜底", "answer": WEAK_REPLY, "sources": docs}
 
         context = "\n\n".join(
     f"【资料{i+1}】：{d['title']}（{d['type']}｜来源：{d['source_name']} {d['source_url']}）\n{d['text']}"
