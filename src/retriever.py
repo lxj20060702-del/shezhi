@@ -30,10 +30,13 @@ class BM25Retriever:
         return math.log(1 + (self.N - n + 0.5) / (n + 0.5))
 
     def search(self, query, doc_type=None, topk=4):
+        # doc_type 支持单个类型（字符串）或多个类型（元组/列表）
+        if doc_type is not None and isinstance(doc_type, str):
+            doc_type = (doc_type,)
         q = self._tok(query)
         scores = []
         for i, toks in enumerate(self.corpus_tokens):
-            if doc_type and self.docs[i]["type"] != doc_type:
+            if doc_type and self.docs[i]["type"] not in doc_type:
                 continue
             tf = Counter(toks)
             s = 0.0
