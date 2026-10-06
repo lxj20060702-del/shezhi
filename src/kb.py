@@ -53,6 +53,7 @@ def load_documents():
             "所需材料：" + "、".join(p.get("materials", [])),
             "办理渠道：" + "、".join(p.get("channels", [])),
             "发布机构：" + p.get("publisher", ""),
+            "标签：" + "、".join(p.get("tags", [])),
         ])
         docs.append({
             "id": p["id"], "type": "政策", "title": p["title"], "text": text,

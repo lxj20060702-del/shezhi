@@ -49,6 +49,18 @@ SYNONYMS = {
     "咋": ["如何", "怎么"],
     "咋办": ["怎么办", "如何处理"],
     "咋整": ["怎么办"],
+    # v0.5 第三轮扩充配套同义词
+    "失业金": ["失业", "保险"],
+    "辞退": ["失业", "保险"],
+    "开除": ["失业", "保险"],
+    "仲裁": ["仲裁", "劳动争议", "争议", "仲裁委", "管辖"],
+    "告老板": ["仲裁", "争议", "仲裁委", "法律援助", "管辖"],
+    "受伤": ["工伤", "工伤认定", "工伤保险"],
+    "领证": ["结婚登记", "婚姻登记"],
+    "结婚": ["婚姻登记", "结婚登记"],
+    "一老一小": ["城乡居民医保", "居民医保"],
+    "社保转移": ["养老保险转移", "跨省转移"],
+    "心里难受": ["心理咨询"],
 }
 
 # 短语模式：需结合上下文才追加的词，避免单字“打”误伤（打车/打架）
@@ -91,7 +103,12 @@ class BM25Retriever:
     def _query_tokens(self, query):
         """查询分词：停用词过滤 + 口语同义词扩展。"""
         tokens = self._tok(query)
-        tokens.extend(w for w in _expand_query(query) if w not in STOPWORDS)
+        # 追加同义词必须经过同样的分词流程，否则“劳动仲裁”等整词
+        # 与文档分词（劳动/仲裁）对不上，等于白追加。
+        for w in _expand_query(query):
+            for sub in jieba.lcut_for_search(w):
+                if sub.strip() and sub not in STOPWORDS and sub not in tokens:
+                    tokens.append(sub)
         return tokens
 
     def _idf(self, w):
