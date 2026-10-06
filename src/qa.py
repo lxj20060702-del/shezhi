@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
-"""RAG 问答：检索 -> 组装证据 -> 大模型生成 -> 来源独立展示 -> 降级兜底。"""
+"""RAG 问答：检索 -> 组装证据 -> 大模型生成 -> 来源独立展示 -> 降级兜底。
+
+v0.6：多轮引导
+- 模糊/宽泛的表达（如“我刚刚失业”）不硬答，先给出编号方向请用户澄清；
+- 用户回复编号或关键词时，还原为完整意图再检索；
+- 追问（“然后呢”“仲裁怎么办”）自动拼接上一轮主题，避免语义断裂；
+- 对话历史保存在 st.session_state（无 streamlit 环境时降级为实例属性）。
+"""
 import re
 
 from retriever import BM25Retriever
@@ -43,6 +50,9 @@ PROJECT_ANCHORS = [
 # 弱命中阈值：top1 原始 BM25 分低于此值，视为知识库无高度相关内容（实测标定）。
 WEAK_SCORE = 6.0
 
+# 历史对话保留轮数（一问一答为 2 条）
+HISTORY_LIMIT = 8
+
 _GREETINGS = {
     "你好", "您好", "hi", "hello", "哈喽", "嗨", "在吗", "在么", "早",
     "早上好", "晚上好", "谢谢", "感谢", "再见", "拜拜", "你是谁", "你叫什么",
@@ -65,6 +75,29 @@ WEAK_REPLY = "\n".join([
     "· 换个更具体的说法再问我一次。",
     "下方是相关性较弱的资料，仅供参考。",
 ])
+
+# —— v0.6 多轮引导：模糊表达澄清 ——
+
+# 宽泛困境词：只表达处境、没有指向具体事务
+VAGUE_SITUATION = [
+    "失业", "丢了工作", "丢工作", "下岗", "没工作", "找不到工作", "刚离职", "被开除",
+    "好难", "很难", "太难了", "走投无路", "活不下去", "不知道怎么办", "不知道咋办",
+    "不知道该怎么办", "帮帮我", "谁能帮帮我",
+]
+
+# 政策类澄清方向：编号/关键词 → 还原后的检索问法
+POLICY_DIRECTIONS = [
+    ("失业保险金怎么领，能领多少", ["失业金", "失业保险", "保险金"]),
+    ("再就业有哪些免费技能培训和补贴", ["培训", "技能", "补贴", "再就业", "找工作"]),
+    ("被辞退有劳动纠纷怎么办（欠薪、仲裁、补偿）", ["仲裁", "欠薪", "工资", "辞退", "补偿", "赔偿", "纠纷"]),
+]
+
+# 资源类澄清方向
+RESOURCE_DIRECTIONS = [
+    ("北京有哪些提供心理与法律支持的妇女公益组织", ["组织", "机构", "支持", "帮助"]),
+    ("有哪些可以申请的妇女儿童公益项目", ["项目", "申请", "助学"]),
+    ("怎么联系打工姐妹的公益互助社群", ["社群", "互助", "姐妹", "活动"]),
+]
 
 
 def _is_meaningless(q):
@@ -103,10 +136,118 @@ def _is_policy(q):
     return sum(h in q for h in POLICY_HINT) >= sum(h in q for h in ORG_HINT)
 
 
+# 具体诉求词：出现这些说明用户虽提到困境，但已指向明确事务，不应再澄清
+_CONCRETE_ASK = [
+    "领", "能领", "多少钱", "怎么领", "怎么办", "咋办", "怎么申请", "怎么办理",
+    "仲裁", "欠薪", "工资", "补偿", "赔偿", "补贴", "培训", "失业金", "保险金",
+    "材料", "流程", "条件", "资格",
+]
+
+
+def _is_vague(q):
+    """宽泛/模糊表达：只说了处境或求助，没有指向具体可检索的事务。"""
+    if len(q) > 12:
+        return False
+    if not any(s in q for s in VAGUE_SITUATION):
+        return False
+    # 已含明确诉求词（领钱/仲裁/补贴等）→ 视为具体问题，直接检索
+    if any(k in q for k in _CONCRETE_ASK):
+        return False
+    return True
+
+
 class QA:
     def __init__(self):
         self.retriever = BM25Retriever()
         self.llm = LLM()
+
+    # ---------- 会话状态（优先 st.session_state；无 streamlit 时用实例属性） ----------
+
+    def _state(self):
+        try:
+            import streamlit as st
+            _ = st.session_state  # noqa: F841
+            return st.session_state
+        except Exception:
+            if not hasattr(self, "_mem_state"):
+                self._mem_state = {}
+            return self._mem_state
+
+    def reset(self):
+        """清空当前会话的多轮状态（配合页面“清空对话”按钮）。"""
+        state = self._state()
+        state["shezhi_history"] = []
+        state["shezhi_pending"] = None
+
+    def _history(self, state):
+        if "shezhi_history" not in state:
+            state["shezhi_history"] = []
+        return state["shezhi_history"]
+
+    def _pending(self, state):
+        return state.get("shezhi_pending")
+
+    def _set_pending(self, state, directions, context_q, route):
+        state["shezhi_pending"] = {
+            "directions": directions, "context": context_q, "route": route,
+        }
+
+    def _clear_pending(self, state):
+        state["shezhi_pending"] = None
+
+    def _append_history(self, state, role, content):
+        history = self._history(state)
+        history.append({"role": role, "content": content})
+        if len(history) > HISTORY_LIMIT:
+            del history[:len(history) - HISTORY_LIMIT]
+
+    # ---------- 澄清引导 ----------
+
+    @staticmethod
+    def _clarify_reply(q, directions):
+        lines = [
+            f"我很理解你现在的处境。关于“{q}”，我可以从这几个方面帮你，",
+            "你回复编号（1/2/3），或直接告诉我你关心哪一块，我再给你具体的办法：",
+        ]
+        for i, (full, _kw) in enumerate(directions, 1):
+            lines.append(f"{i}. {full}")
+        return "\n".join(lines)
+
+    def _match_pending(self, q, pending):
+        """用户对上一轮澄清的回复：编号或关键词 → 还原后的完整问法。匹配不到返回 None。"""
+        directions = pending["directions"]
+        stripped = q.strip()
+        if re.fullmatch(r"[1-3１-３]", stripped):
+            idx = int(stripped) - 1
+            if 0 <= idx < len(directions):
+                return directions[idx][0]
+        if len(stripped) <= 12:
+            for full, kws in directions:
+                if any(k in stripped for k in kws):
+                    return full
+        return None
+
+    # ---------- 检索式追问的 query 补全 ----------
+
+    def _enrich_query(self, q, state):
+        """追问/指代语（“然后呢”“仲裁呢”）拼接上一轮主题，避免语义断裂。"""
+        history = self._history(state)
+        if not history:
+            return q
+        last_user = next(
+            (m["content"] for m in reversed(history) if m["role"] == "user"), ""
+        )
+        if not last_user:
+            return q
+        # 追问特征：短、含承接/指代、缺少明确事务名词
+        followup_flag = (
+            len(q) <= 12
+            and any(k in q for k in
+                    ["然后", "接下来", "还有", "另外", "那个", "这个", "之后", "呢", "咋", "咋办"])
+        )
+        return f"{last_user} {q}" if followup_flag else q
+
+    # ---------- 路由 ----------
 
     def _route(self, q):
         """政策类走政策库；资源类同时检索公益组织与公益项目。"""
@@ -114,40 +255,81 @@ class QA:
 
     def answer(self, q, topk=4):
         q = (q or "").strip()
+        state = self._state()
+
+        # ⓪ 承接上一轮澄清（优先于寒暄判断）：编号/关键词 → 完整意图
+        pending = self._pending(state)
+        matched = self._match_pending(q, pending) if pending else None
+        if matched:
+            self._clear_pending(state)
+            return self._answer_question(matched, topk, state, display_q=q)
 
         # ① 无意义/寒暄输入：给出使用引导，不检索、不调用大模型
         if _is_meaningless(q):
             return {"route": "寒暄", "mode": "使用引导", "answer": GUIDE_REPLY, "sources": []}
 
-        route = self._route(q)
+        # 非澄清回复，旧的待选项作废（用户可能已换话题）
+        if pending:
+            self._clear_pending(state)
+
+        # ③ 模糊/宽泛表达：先澄清引导，不硬答
+        if _is_vague(q):
+            route = self._route(q)
+            directions = POLICY_DIRECTIONS if route == "政策" else RESOURCE_DIRECTIONS
+            self._set_pending(state, directions, q, route)
+            reply = self._clarify_reply(q, directions)
+            return {"route": route, "mode": "澄清引导", "answer": reply, "sources": []}
+
+        # ④ 正常检索式问答（含追问的 query 补全）
+        search_q = self._enrich_query(q, state)
+        return self._answer_question(search_q, topk, state, shown_q=q, display_q=q)
+
+    def _answer_question(self, search_q, topk, state, shown_q=None, display_q=None):
+        """检索 + 证据组装 + 大模型生成。shown_q 为历史/展示口径，display_q 为用户原话。"""
+        route = self._route(search_q)
         if route == "政策":
             doc_type = ("政策",)
         else:
             doc_type = ("组织", "项目")  # 组织与公益项目同属“社会资源”，一并打分
-        scored = self.retriever.search_with_scores(q, doc_type=doc_type, topk=topk)
+        scored = self.retriever.search_with_scores(search_q, doc_type=doc_type, topk=topk)
         if not scored:
-            scored = self.retriever.search_with_scores(q, topk=topk)
+            scored = self.retriever.search_with_scores(search_q, topk=topk)
         docs = [d for d, _ in scored]
 
-        # ② 弱命中：top1 分数过低说明无高度相关内容，诚实兜底而非硬答
+        # 弱命中：top1 分数过低说明无高度相关内容，诚实兜底而非硬答
         top1 = scored[0][1] if scored else 0.0
         if top1 < WEAK_SCORE:
             return {"route": route, "mode": "弱命中兜底", "answer": WEAK_REPLY, "sources": docs}
 
         context = "\n\n".join(
-    f"【资料{i+1}】：{d['title']}（{d['type']}｜来源：{d['source_name']} {d['source_url']}）\n{d['text']}"
-    for i, d in enumerate(docs)
+            f"【资料{i+1}】：{d['title']}（{d['type']}｜来源：{d['source_name']} {d['source_url']}）\n{d['text']}"
+            for i, d in enumerate(docs)
         )
+
+        # 对话历史（仅在多轮时附带，帮助模型理解指代）
+        history = self._history(state)
+        history_block = ""
+        if history:
+            recent = history[-HISTORY_LIMIT:]
+            history_block = "\n".join(
+                f"{'用户' if m['role'] == 'user' else '助手'}：{m['content']}"
+                for m in recent
+            )
+
         user = f"""
+        【对话历史】
+
+        {history_block or '（无，这是第一轮）'}
+
         【参考资料】
 
         {context}
 
         【用户问题】
 
-        {q}
+        {display_q or shown_q or search_q}
 
-        请严格依据参考资料回答。
+        请结合对话历史理解用户问题，并严格依据参考资料回答。
         只输出给用户看的正文。
         不要输出资料编号。
         不要输出【来源1】、【来源2】等格式。
@@ -165,10 +347,15 @@ class QA:
             text = re.sub(r'（来源\s*\d+）', '', text)
 
         if text and not text.startswith("[大模型调用失败"):
+            # 记入多轮历史：用户原话 + 助手回答
+            self._append_history(state, "user", display_q or shown_q or search_q)
+            self._append_history(state, "assistant", text)
             return {"route": route, "mode": "RAG+大模型", "answer": text, "sources": docs}
 
         # 降级：无大模型时，输出“可核验”的检索式答案
-        fallback = self._extractive(docs, q)
+        fallback = self._extractive(docs, display_q or shown_q or search_q)
+        self._append_history(state, "user", display_q or shown_q or search_q)
+        self._append_history(state, "assistant", fallback)
         return {"route": route, "mode": "检索式（未配置大模型）", "answer": fallback, "sources": docs}
 
     @staticmethod
