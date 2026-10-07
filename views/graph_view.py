@@ -79,7 +79,12 @@ _GRAPH_TPL = """
         font:{size: isMobile?9:10, align:"middle", color:"#7a8a8d",
               strokeWidth:3, strokeColor:"rgba(255,255,255,.9)"},
         smooth:{type:"continuous"},
-        arrows:{to:{enabled:true, scaleFactor:0.7}}
+        // 手机端初始视图经 fit 缩放后，默认 1px 细线在小屏上几乎看不清：
+        // 移动端线宽加到 2.5，初始状态即明显；桌面端维持默认 1
+        // （vis-network 的 hoverWidth/selectionWidth 是在线宽上叠加，无需另设）
+        width: isMobile ? 2.5 : 1,
+        // 箭头大小不随线宽联动，需单独放大：移动端恢复默认比例 1，桌面端保持 0.7
+        arrows:{to:{enabled:true, scaleFactor: isMobile ? 1 : 0.7}}
       },
       groups: groups,
       physics:{
